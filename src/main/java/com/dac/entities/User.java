@@ -22,13 +22,22 @@ public class User extends BaseEntity{
     @Column(unique = true,nullable = false, length=50)
     private String email;
     
-    @Column(unique = true, length=10) // check length later
+    @Column(unique = true, length=15) // check length later
     private String phone;
     
     @Column(nullable = false, length = 50)
     private String password;
     
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Gender gender;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserRole role;   // ADMIN, CUSTOMER, PROVIDER
+    
+    @Enumerated(EnumType.STRING)
+    private Status isActive;
+    
     
 }
