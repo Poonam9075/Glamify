@@ -1,4 +1,4 @@
-package com.dac.services;
+package com.Glamify.services;
 
 public interface AppointmentService {
 

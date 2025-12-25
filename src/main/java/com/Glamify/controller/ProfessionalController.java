@@ -1,4 +1,4 @@
-package com.dac.controller;
+package com.Glamify.controller;
 
 public class ProfessionalController {
 

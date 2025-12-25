@@ -1,4 +1,4 @@
-package com.dac.repository;
+package com.Glamify.repository;
 
 public class AppointmentRepository {
 

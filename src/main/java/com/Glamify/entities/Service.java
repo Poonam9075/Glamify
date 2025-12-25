@@ -1,4 +1,4 @@
-package com.dac.entities;
+package com.Glamify.entities;
 
 import java.sql.Time;
 

@@ -1,4 +1,4 @@
-package com.dac.entities;
+package com.Glamify.entities;
 
 public enum Status {
 ACTIVE, INACTIVE

@@ -1,4 +1,4 @@
-package com.dac.entities;
+package com.Glamify.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
