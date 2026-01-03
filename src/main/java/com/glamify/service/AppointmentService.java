@@ -1,9 +1,9 @@
 package com.glamify.service;
 
+import com.glamify.dto.CustomerBookingRequest;
 import com.glamify.entity.*;
 import com.glamify.exception.InvalidAppointmentStatusException;
 import com.glamify.repository.*;
-
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,159 +15,182 @@ import java.util.List;
 @Transactional
 public class AppointmentService {
 
+    // ================== REPOSITORIES ==================
     private final AppointmentRepository appointmentRepo;
     private final BookedServiceRepository bookedServiceRepo;
     private final InvoiceRepository invoiceRepo;
     private final PaymentRepository paymentRepo;
     private final CustomerRepository customerRepo;
     private final ProfessionalRepository professionalRepo;
+    private final BeautyServiceRepository serviceRepo;
 
+    // ================== CONSTRUCTOR ==================
     public AppointmentService(AppointmentRepository appointmentRepo,
                               BookedServiceRepository bookedServiceRepo,
                               InvoiceRepository invoiceRepo,
                               PaymentRepository paymentRepo,
                               CustomerRepository customerRepo,
-                              ProfessionalRepository professionalRepo) {
+                              ProfessionalRepository professionalRepo,
+                              BeautyServiceRepository serviceRepo) {
         this.appointmentRepo = appointmentRepo;
         this.bookedServiceRepo = bookedServiceRepo;
         this.invoiceRepo = invoiceRepo;
         this.paymentRepo = paymentRepo;
         this.customerRepo = customerRepo;
         this.professionalRepo = professionalRepo;
+        this.serviceRepo = serviceRepo;
     }
 
-    // =========================================================
-    // 1️⃣ CREATE APPOINTMENT (CUSTOMER FROM JWT)
-    // =========================================================
-	public Appointment createAppointment(Appointment appointment, List<BookedService> services) {
+    // =================================================
+    // 1️⃣ CUSTOMER BOOKING (AUTO-ASSIGN PROFESSIONAL)
+    // =================================================
+    public Appointment createAppointmentForCustomer(CustomerBookingRequest req) {
 
-		// ===============================
-		// 1️⃣ CUSTOMER FROM JWT (SAFE)
-		// ===============================
-		String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
 
-		Customer customer = customerRepo.findByEmail(email)
-				.orElseThrow(() -> new RuntimeException("Logged-in user is not a CUSTOMER"));
+        Customer customer = customerRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
 
-		appointment.setCustomer(customer);
+        Professional professional = professionalRepo.findAll().get(0);
 
-		// ===============================
-		// 2️⃣ PROFESSIONAL FROM DB (SAFE)
-		// ===============================
-		Long professionalId = appointment.getProfessional().getUserId();
+        Appointment appointment = new Appointment();
+        appointment.setCustomer(customer);
+        appointment.setProfessional(professional);
+        appointment.setLocation(req.getLocation());
+        appointment.setDateTime(LocalDateTime.parse(req.getDateTime()));
+        appointment.setStatus(AppointmentStatus.CREATED);
 
-		Professional professional = professionalRepo.findById(professionalId)
-				.orElseThrow(() -> new RuntimeException("Invalid Professional ID"));
+        Appointment saved = appointmentRepo.save(appointment);
 
-		appointment.setProfessional(professional);
+        double total = 0;
 
-		// ===============================
-		// 3️⃣ STATUS
-		// ===============================
-		appointment.setStatus(AppointmentStatus.CREATED);
+        for (Long serviceId : req.getServiceIds()) {
 
-		// ===============================
-		// 4️⃣ SAVE APPOINTMENT
-		// ===============================
-		Appointment saved = appointmentRepo.save(appointment);
+            BeautyService service = serviceRepo.findById(serviceId)
+                    .orElseThrow(() -> new RuntimeException("Service not found"));
 
-		// ===============================
-		// 5️⃣ BOOKED SERVICES
-		// ===============================
-		double total = 0;
-		for (BookedService bs : services) {
-			bs.setAppointment(saved);
-			total += bs.getPriceAtBooking();
-			bookedServiceRepo.save(bs);
-		}
+            BookedService bs = new BookedService();
+            bs.setAppointment(saved);
+            bs.setBeautyService(service);
+            bs.setPriceAtBooking(service.getPrice());
+            bs.setEstimatedTime(service.getDuration());
 
-		// ===============================
-		// 6️⃣ INVOICE
-		// ===============================
-		Invoice invoice = new Invoice();
-		invoice.setAppointment(saved);
-		invoice.setTotal(total);
-		invoice.setFinalAmount(total);
-		invoice.setDateTime(LocalDateTime.now());
-		invoiceRepo.save(invoice);
+            bookedServiceRepo.save(bs);
 
-		return saved;
-	}
+            total += service.getPrice();
+        }
+
+        Invoice invoice = new Invoice();
+        invoice.setAppointment(saved);
+        invoice.setTotal(total);
+        invoice.setFinalAmount(total);
+        invoice.setDateTime(LocalDateTime.now());
+        invoiceRepo.save(invoice);
+
+        return saved;
+    }
 
 
-    // =========================================================
-    // 2️⃣ UPDATE APPOINTMENT STATUS
-    // (Customer / Professional / Admin)
-    // =========================================================
+    // =================================================
+    // 2️⃣ OLD BOOKING STYLE (ADMIN / TESTING USE)
+    // =================================================
+    public Appointment createAppointment(Appointment appointment,
+                                         List<BookedService> services) {
+
+        Appointment savedAppointment = appointmentRepo.save(appointment);
+
+        double total = 0;
+        for (BookedService bs : services) {
+            bs.setAppointment(savedAppointment);
+            total += bs.getPriceAtBooking();
+            bookedServiceRepo.save(bs);
+        }
+
+        Invoice invoice = new Invoice();
+        invoice.setAppointment(savedAppointment);
+        invoice.setTotal(total);
+        invoice.setFinalAmount(total);
+        invoice.setDateTime(LocalDateTime.now());
+        invoiceRepo.save(invoice);
+
+        return savedAppointment;
+    }
+
+    // =================================================
+    // 3️⃣ UPDATE APPOINTMENT STATUS (STATE MACHINE)
+    // =================================================
     public Appointment updateStatus(Long appointmentId,
                                     AppointmentStatus newStatus) {
 
         Appointment appointment = appointmentRepo.findById(appointmentId)
-                .orElseThrow(() ->
-                        new RuntimeException("Appointment not found"));
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        validateStatusTransition(
-                appointment.getStatus(),
-                newStatus
-        );
+        AppointmentStatus current = appointment.getStatus();
 
-        appointment.setStatus(newStatus);
+        // Validate transitions
+        if (current == AppointmentStatus.CREATED &&
+                (newStatus == AppointmentStatus.ACCEPTED ||
+                 newStatus == AppointmentStatus.CANCELLED)) {
+
+            appointment.setStatus(newStatus);
+
+        } else if (current == AppointmentStatus.ACCEPTED &&
+                (newStatus == AppointmentStatus.IN_PROGRESS ||
+                 newStatus == AppointmentStatus.CANCELLED)) {
+
+            appointment.setStatus(newStatus);
+
+        } else if (current == AppointmentStatus.IN_PROGRESS &&
+                newStatus == AppointmentStatus.COMPLETED) {
+
+            appointment.setStatus(newStatus);
+
+        } else {
+            throw new InvalidAppointmentStatusException(
+                    "Invalid status change from " + current + " to " + newStatus);
+        }
+
         return appointmentRepo.save(appointment);
     }
 
-    // =========================================================
-    // 3️⃣ MAKE PAYMENT (AFTER COMPLETION)
-    // =========================================================
+    // =================================================
+    // 4️⃣ PROFESSIONAL ACTIONS
+    // =================================================
+    public Appointment acceptAppointment(Long id) {
+        return updateStatus(id, AppointmentStatus.ACCEPTED);
+    }
+
+    public Appointment startAppointment(Long id) {
+        return updateStatus(id, AppointmentStatus.IN_PROGRESS);
+    }
+
+    public Appointment completeAppointment(Long id) {
+        return updateStatus(id, AppointmentStatus.COMPLETED);
+    }
+
+    // =================================================
+    // 5️⃣ CUSTOMER CANCEL
+    // =================================================
+    public Appointment cancelAppointment(Long id) {
+        return updateStatus(id, AppointmentStatus.CANCELLED);
+    }
+
+    // =================================================
+    // 6️⃣ PAYMENT
+    // =================================================
     public Payment makePayment(Long invoiceId, String method) {
 
         Invoice invoice = invoiceRepo.findById(invoiceId)
-                .orElseThrow(() ->
-                        new RuntimeException("Invoice not found"));
+                .orElseThrow(() -> new RuntimeException("Invoice not found"));
 
         Payment payment = new Payment();
         payment.setInvoice(invoice);
-        payment.setPaymentMethod(method);
         payment.setAmount(invoice.getFinalAmount());
+        payment.setPaymentMethod(method);
         payment.setStatus("SUCCESS");
+        //payment.setPaymentDate(LocalDateTime.now());
 
         return paymentRepo.save(payment);
-    }
-
-    // =========================================================
-    // 4️⃣ STATUS VALIDATION (BUSINESS RULES)
-    // =========================================================
-    private void validateStatusTransition(AppointmentStatus current,
-                                          AppointmentStatus next) {
-
-        switch (current) {
-
-            case CREATED -> {
-                if (next != AppointmentStatus.ACCEPTED &&
-                    next != AppointmentStatus.CANCELLED) {
-                    throw new InvalidAppointmentStatusException(
-                        "CREATED → ACCEPTED or CANCELLED only");
-                }
-            }
-
-            case ACCEPTED -> {
-                if (next != AppointmentStatus.IN_PROGRESS &&
-                    next != AppointmentStatus.CANCELLED) {
-                    throw new InvalidAppointmentStatusException(
-                        "ACCEPTED → IN_PROGRESS or CANCELLED only");
-                }
-            }
-
-            case IN_PROGRESS -> {
-                if (next != AppointmentStatus.COMPLETED) {
-                    throw new InvalidAppointmentStatusException(
-                        "IN_PROGRESS → COMPLETED only");
-                }
-            }
-
-            case COMPLETED, CANCELLED -> {
-                throw new InvalidAppointmentStatusException(
-                        current + " is a final state");
-            }
-        }
     }
 }

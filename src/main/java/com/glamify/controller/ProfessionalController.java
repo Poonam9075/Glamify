@@ -4,6 +4,7 @@ import com.glamify.entity.Appointment;
 import com.glamify.entity.AppointmentStatus;
 import com.glamify.repository.AppointmentRepository;
 import com.glamify.service.AppointmentService;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,42 +13,48 @@ import java.util.List;
 @RequestMapping("/api/professional")
 public class ProfessionalController {
 
-    private final AppointmentService appointmentService;
     private final AppointmentRepository appointmentRepo;
+    private final AppointmentService appointmentService;
 
-    public ProfessionalController(AppointmentService appointmentService,
-                                  AppointmentRepository appointmentRepo) {
-        this.appointmentService = appointmentService;
+    public ProfessionalController(AppointmentRepository appointmentRepo,
+                                  AppointmentService appointmentService) {
         this.appointmentRepo = appointmentRepo;
+        this.appointmentService = appointmentService;
     }
 
-    // ================= VIEW ASSIGNED APPOINTMENTS =================
-    @GetMapping("/appointments/{professionalId}")
-    public List<Appointment> getAppointments(@PathVariable Long professionalId) {
-        return appointmentRepo.findByProfessionalUserId(professionalId);
+    // =================================================
+    // 1️⃣ VIEW MY ASSIGNED APPOINTMENTS
+    // =================================================
+    @GetMapping("/appointments")
+    public List<Appointment> getMyAppointments() {
+
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        return appointmentRepo.findByProfessionalEmail(email);
     }
 
-    // ================= ACCEPT =================
+    // =================================================
+    // 2️⃣ ACCEPT APPOINTMENT
+    // =================================================
     @PutMapping("/appointment/{id}/accept")
     public Appointment accept(@PathVariable Long id) {
-        return appointmentService.updateStatus(id, AppointmentStatus.ACCEPTED);
+        return appointmentService.acceptAppointment(id);
     }
 
-    // ================= START =================
+    // =================================================
+    // 3️⃣ START APPOINTMENT
+    // =================================================
     @PutMapping("/appointment/{id}/start")
     public Appointment start(@PathVariable Long id) {
-        return appointmentService.updateStatus(id, AppointmentStatus.IN_PROGRESS);
+        return appointmentService.startAppointment(id);
     }
 
-    // ================= COMPLETE =================
+    // =================================================
+    // 4️⃣ COMPLETE APPOINTMENT
+    // =================================================
     @PutMapping("/appointment/{id}/complete")
     public Appointment complete(@PathVariable Long id) {
-        return appointmentService.updateStatus(id, AppointmentStatus.COMPLETED);
-    }
-
-    // ================= CANCEL =================
-    @PutMapping("/appointment/{id}/cancel")
-    public Appointment cancel(@PathVariable Long id) {
-        return appointmentService.updateStatus(id, AppointmentStatus.CANCELLED);
+        return appointmentService.completeAppointment(id);
     }
 }

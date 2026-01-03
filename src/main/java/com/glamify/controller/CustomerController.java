@@ -1,9 +1,11 @@
 package com.glamify.controller;
 
+import com.glamify.dto.CustomerBookingRequest;
 import com.glamify.entity.*;
 import com.glamify.repository.AppointmentRepository;
+import com.glamify.repository.BeautyServiceRepository;
 import com.glamify.service.AppointmentService;
-
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,52 +16,60 @@ public class CustomerController {
 
     private final AppointmentService appointmentService;
     private final AppointmentRepository appointmentRepo;
+    private final BeautyServiceRepository beautyServiceRepository;
 
+    // ✅ SINGLE CONSTRUCTOR (CORRECT)
     public CustomerController(AppointmentService appointmentService,
-                              AppointmentRepository appointmentRepo) {
+                              AppointmentRepository appointmentRepo,
+                              BeautyServiceRepository beautyServiceRepository) {
         this.appointmentService = appointmentService;
         this.appointmentRepo = appointmentRepo;
+        this.beautyServiceRepository = beautyServiceRepository;
     }
 
     // =================================================
-    // 1️⃣ CREATE APPOINTMENT (CUSTOMER FROM JWT)
+    // 1️⃣ GET ALL SERVICES (FROM DATABASE)
+    // =================================================
+    @GetMapping("/services")
+    public List<BeautyService> getAllServices() {
+        return beautyServiceRepository.findAll();
+    }
+
+    // =================================================
+    // 2️⃣ CREATE APPOINTMENT (CUSTOMER FROM JWT)
     // =================================================
     @PostMapping("/appointment")
-    public Appointment createAppointment(
-            @RequestBody AppointmentRequest request) {
+    public Appointment bookAppointment(
+            @RequestBody CustomerBookingRequest request) {
 
-        return appointmentService.createAppointment(
-                request.getAppointment(),
-                request.getBookedServices()
-        );
+        return appointmentService.createAppointmentForCustomer(request);
     }
 
     // =================================================
-    // 2️⃣ VIEW ALL MY APPOINTMENTS
+    // 3️⃣ VIEW MY APPOINTMENTS (JWT BASED)
     // =================================================
-    @GetMapping("/appointments/{customerId}")
-    public List<Appointment> getMyAppointments(
-            @PathVariable Long customerId) {
+    @GetMapping("/appointments")
+    public List<Appointment> getMyAppointments() {
 
-        return appointmentRepo.findByCustomerUserId(customerId);
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        return appointmentRepo.findByCustomerEmail(email);
     }
 
     // =================================================
-    // 3️⃣ CANCEL APPOINTMENT
+    // 4️⃣ CANCEL APPOINTMENT
     // CREATED / ACCEPTED → CANCELLED
     // =================================================
     @PutMapping("/appointment/{appointmentId}/cancel")
     public Appointment cancelAppointment(
             @PathVariable Long appointmentId) {
 
-        return appointmentService.updateStatus(
-                appointmentId,
-                AppointmentStatus.CANCELLED
-        );
+        return appointmentService.cancelAppointment(appointmentId);
     }
 
     // =================================================
-    // 4️⃣ VIEW SINGLE APPOINTMENT DETAILS
+    // 5️⃣ VIEW SINGLE APPOINTMENT DETAILS
     // =================================================
     @GetMapping("/appointment/{appointmentId}")
     public Appointment getAppointmentDetails(
@@ -71,7 +81,7 @@ public class CustomerController {
     }
 
     // =================================================
-    // 5️⃣ PAY FOR COMPLETED APPOINTMENT
+    // 6️⃣ PAY FOR APPOINTMENT
     // =================================================
     @PostMapping("/payment/{invoiceId}")
     public Payment makePayment(
