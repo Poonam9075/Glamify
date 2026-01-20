@@ -21,7 +21,10 @@ public class User {
     private String phone;
     
     private String password;
-    private String userRole; // ADMIN, CUSTOMER, PROFESSIONAL
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role userRole; // ADMIN, CUSTOMER, PROFESSIONAL
     
     private boolean active = true;
 }

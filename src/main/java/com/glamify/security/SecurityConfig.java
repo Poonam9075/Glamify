@@ -2,11 +2,14 @@ package com.glamify.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
@@ -21,10 +24,17 @@ public class SecurityConfig {
 
         http
             .csrf(csrf -> csrf.disable())
+            // ENABLE CORS
             .cors(cors -> {})
+            // DISABLE DEFAULT LOGIN MECHANISMS
+            .formLogin(form -> form.disable())
+            .httpBasic(basic -> basic.disable())
             .authorizeHttpRequests(auth -> auth
 
-                // 🔓 STATIC FRONTEND FILES (THIS FIXES 403)
+        		// ALLOW PREFLIGHT
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            		
+                // STATIC FRONTEND FILES (THIS FIXES 403)
                 .requestMatchers(
                 		"/",
                 		"/*.html",
@@ -33,8 +43,7 @@ public class SecurityConfig {
                         "/customer.html",
                         "/professional.html",
                         "/navbar.html",
-                        "/api.js",
-                        //"/images/glamify-logo.png",
+                        "/api.js",                        
                         "/css/**",
                         "/js/**",
                         "/images/**",
@@ -42,16 +51,18 @@ public class SecurityConfig {
                         "/favicon.ico"
                 ).permitAll()
 
-                // 🔓 AUTH + SWAGGER
+                // AUTH + SWAGGER
                 .requestMatchers(
                     "/api/auth/**",
+                    "/register/**",
+                    "/login/**",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
                     "/swagger-ui.html"
                 ).permitAll()
 
-                // 🔓 PREFLIGHT
-                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                // PREFLIGHT
+                //.requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
 
                 // 🔐 ROLE-BASED APIs
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

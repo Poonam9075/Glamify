@@ -2,24 +2,64 @@
 // AUTH + COMMON UTILS
 // ===========================
 
+
+// ================= TOKEN HELPERS =================
 function getToken() {
     return localStorage.getItem("token");
 }
 
+function getRole() {
+    return localStorage.getItem("role");
+}
+
+// ================= AUTH HEADERS =================
 function authHeaders() {
+    const token = getToken();
+    if (!token) return {};
+
     return {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + getToken()
+        "Authorization": "Bearer " + token,
+        "Content-Type": "application/json"
     };
 }
 
+
+// ================= AUTH FETCH (OPTIONAL) =================
+function authFetch(url, options = {}) {
+    return fetch(url, {
+        ...options,
+        headers: {
+            ...authHeaders(),
+            ...(options.headers || {})
+        }
+    });
+}
+
+// ================= LOGOUT =================
 function logout() {
     localStorage.clear();
     window.location.href = "/login.html";
 }
 
+// ================= AUTH GUARD =================
 function requireAuth() {
-    if (!getToken()) {
+    const token = getToken();
+    const role = getRole();
+
+    if (!token || !role) {
+        window.location.href = "/login.html";
+        return;
+    }
+
+    const path = window.location.pathname;
+
+    if (path.includes("admin") && role !== "ADMIN") {
+        window.location.href = "/login.html";
+    }
+    if (path.includes("customer") && role !== "CUSTOMER") {
+        window.location.href = "/login.html";
+    }
+    if (path.includes("professional") && role !== "PROFESSIONAL") {
         window.location.href = "/login.html";
     }
 }

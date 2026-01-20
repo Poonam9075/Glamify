@@ -2,23 +2,21 @@ package com.glamify.controller;
 
 import com.glamify.dto.LoginRequest;
 import com.glamify.dto.LoginResponse;
-import com.glamify.dto.RegisterRequest;
 import com.glamify.entity.Customer;
 import com.glamify.entity.Professional;
+import com.glamify.entity.Role;
 import com.glamify.entity.User;
 import com.glamify.repository.CustomerRepository;
 import com.glamify.repository.ProfessionalRepository;
 import com.glamify.repository.UserRepository;
 import com.glamify.security.JwtUtil;
-
-import java.util.Map;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin
 public class AuthController {
 
     private final CustomerRepository customerRepo;
@@ -36,25 +34,45 @@ public class AuthController {
         this.jwtUtil = jwtUtil;
     }
 
+    
     // =================================================
     // REGISTER CUSTOMER
     // =================================================
     @PostMapping("/register/customer")
-    public Customer registerCustomer(@RequestBody Customer customer) {
-        customer.setUserRole("CUSTOMER");
-        return customerRepo.save(customer);
+    public ResponseEntity<?> registerCustomer(
+            @RequestBody Customer customer) {
+
+        customer.setPassword(customer.getPassword()); // TO-DO need to add encryption * * * * * * * * * * * *
+
+        customer.setUserRole(Role.CUSTOMER);
+
+        Customer saved =
+        		customerRepo.save(customer);
+
+        return ResponseEntity.ok(saved);
     }
+
 
     // =================================================
     // REGISTER PROFESSIONAL
     // =================================================
     @PostMapping("/register/professional")
-    public Professional registerProfessional(@RequestBody Professional professional) {
-        professional.setUserRole("PROFESSIONAL");
-        professional.setRating(0.0);
-        return professionalRepo.save(professional);
-    }
+	public ResponseEntity<?> registerProfessional(
+	        @RequestBody Professional professional) {
+	
+	    professional.setPassword(
+	        professional.getPassword() // TO-DO need to add encryption * * * * * * * * * * * *
+	    );
+		
+	    professional.setUserRole(Role.PROFESSIONAL);
+	
+	    Professional saved =
+	    		professionalRepo.save(professional);
+	
+	    return ResponseEntity.ok(saved);
+	}
 
+/*
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
 
@@ -107,7 +125,7 @@ public class AuthController {
 
         return ResponseEntity.ok(Map.of("message", "Registration successful"));
     }
-
+*/
     
     // =================================================
     // LOGIN (DB VALIDATED + JWT)
@@ -132,7 +150,7 @@ public class AuthController {
         }
 
         // 3️⃣ Get role from DB (NOT frontend)
-        String role = user.getUserRole();
+        String role = user.getUserRole().name();
         String fullName = user.getFullName();
 
         // 4️⃣ Generate token with DB role

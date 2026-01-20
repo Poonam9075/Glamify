@@ -1,48 +1,59 @@
 package com.glamify.security;
 
+import java.security.Key;
+import java.util.Date;
+import org.springframework.stereotype.Component;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.stereotype.Component;
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
 
 @Component
 public class JwtUtil {
 
-    // 🔐 SECRET must be at least 32 characters for HS256
-    private static final String SECRET =
-            "glamify-secure-jwt-secret-key-123456";
+    // SECRET KEY (must be same for generate + validate)
+    private static final Key SECRET_KEY =
+            Keys.hmacShaKeyFor("glamify-secret-key-glamify-secret-key".getBytes());
 
-    private static final long EXPIRATION = 86400000; // 1 day
+    // Token validity (24 hours)
+    private static final long EXPIRATION_TIME = 24 * 60 * 60 * 1000;
 
-    private final SecretKey key =
-            Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
-
-    // =================================================
-    // GENERATE TOKEN
-    // =================================================
+    // ================== GENERATE TOKEN ==================
     public String generateToken(String username, String role) {
 
         return Jwts.builder()
                 .setSubject(username)
-                .claim("role", role)
+                .claim("role", role)          // CUSTOMER / ADMIN / PROFESSIONAL
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                .signWith(key, SignatureAlgorithm.HS256) // ✅ NEW WAY
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // =================================================
-    // VALIDATE TOKEN
-    // will be called by custom JWT filter
-    // =================================================
-    public Claims validateToken(String token) {
+    // ================== VALIDATE TOKEN ==================
+    public boolean validateToken(String token) {
+        try {
+            extractAllClaims(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
+    // ================== EXTRACT USERNAME ==================
+    public String extractUsername(String token) {
+        return extractAllClaims(token).getSubject();
+    }
+
+    // ================== EXTRACT ROLE ==================
+    public String extractRole(String token) {
+        return extractAllClaims(token).get("role", String.class);
+    }
+
+    // ================== PARSE CLAIMS ==================
+    private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(SECRET_KEY)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

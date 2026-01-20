@@ -159,7 +159,12 @@ function register() {
         role
     };
 
-    fetch("/api/auth/register", {
+    const url =
+        role === "PROFESSIONAL"
+            ? "/api/auth/register/professional"
+            : "/api/auth/register/customer";
+
+    fetch(url, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
