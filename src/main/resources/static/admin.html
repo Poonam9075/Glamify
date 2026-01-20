@@ -1,90 +1,260 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="UTF-8">
-    <title>Admin Dashboard</title>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+<!-- Bootstrap FIRST -->
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+	rel="stylesheet">
+
+<!-- Your styles LAST -->
+<link rel="stylesheet" href="/styles.css">
+
+<link rel="icon" href="data:,">
+
 </head>
 
-<body onload="requireAuth(); loadServices();">
+<!-- Toast Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
 
-<!-- Navbar -->
-<div id="navbar"></div>
+	<div id="appToast"
+		class="toast align-items-center text-white bg-success border-0"
+		role="alert" aria-live="assertive" aria-atomic="true">
 
-<div class="container mt-4">
+		<div class="d-flex">
+			<div class="toast-body d-flex align-items-center">
+				<span id="toastIcon" class="me-2 fs-5">✅</span> <span
+					id="toastMessage">Action completed</span>
+			</div>
+			<button type="button" class="btn-close btn-close-white me-2 m-auto"
+				data-bs-dismiss="toast"></button>
+		</div>
 
-    <h3 class="mb-4">Admin Dashboard</h3>
-
-    <!-- ADD SERVICE CARD -->
-    <div class="card shadow mb-4">
-        <div class="card-header bg-primary text-white">
-            Add Beauty Service
-        </div>
-        <div class="card-body">
-
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <input id="serviceName" class="form-control"
-                           placeholder="Service Name">
-                </div>
-                <div class="col-md-3">
-                    <input id="category" class="form-control"
-                           placeholder="Category">
-                </div>
-                <div class="col-md-3">
-                    <input id="price" type="number" class="form-control"
-                           placeholder="Price">
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-success w-100"
-                            onclick="addService()">
-                        Add Service
-                    </button>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- SERVICES LIST -->
-    <div class="card shadow">
-        <div class="card-header bg-dark text-white">
-            Beauty Services
-        </div>
-        <div class="card-body">
-
-            <table class="table table-bordered table-hover">
-                <thead class="table-secondary">
-                <tr>
-                    <th>ID</th>
-                    <th>Service Name</th>
-                    <th>Category</th>
-                    <th>Price</th>
-                </tr>
-                </thead>
-                <tbody id="servicesTable">
-                </tbody>
-            </table>
-
-        </div>
-    </div>
+	</div>
 
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Common JS -->
-<script src="api.js"></script>
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
 
-<script>
-// Load navbar
-fetch("/navbar.html")
-    .then(res => res.text())
-    .then(data => document.getElementById("navbar").innerHTML = data);
+			<div class="modal-header bg-dark text-white">
+				<h5 class="modal-title">Confirm Action</h5>
+				<button type="button" class="btn-close btn-close-white"
+					data-bs-dismiss="modal"></button>
+			</div>
+
+			<div class="modal-body">
+				<p id="confirmMessage" class="mb-0"></p>
+			</div>
+
+			<div class="modal-footer">
+				<button class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+				<button class="btn btn-danger" id="confirmYesBtn">Yes,
+					Continue</button>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+
+<!-- <body onload="requireAuth(); loadServices(); setupAdminLiveValidation();"> -->
+<body onload="requireAuth(); initAdminPage();">
+
+
+	<!-- Navbar -->
+	<div id="navbar"></div>
+
+	<div class="container mt-4">
+
+		<ul class="nav nav-tabs mb-3" role="tablist">
+			<li class="nav-item">
+				<button class="nav-link active" data-bs-toggle="tab"
+					data-bs-target="#servicesTab" type="button">Services</button>
+			</li>
+
+			<li class="nav-item">
+				<button class="nav-link" data-bs-toggle="tab"
+					data-bs-target="#usersTab" type="button">Users</button>
+			</li>
+		</ul>
+
+		<div class="tab-content">
+			<div class="tab-pane fade show active" id="servicesTab">
+				<!-- ADD SERVICE CARD -->
+				<div class="card shadow mb-4">
+					<div class="card-header bg-primary text-white">Add / Update
+						Service</div>
+					<div class="card-body">
+
+						<div class="row mb-3">
+							<div class="col-md-2">
+								<input id="serviceName" class="form-control"
+									placeholder="Service Name">
+								<div class="invalid-feedback">Service name is required</div>
+							</div>
+							<div class="col-md-2">
+								<input id="category" class="form-control" placeholder="Category">
+								<div class="invalid-feedback">Category is required</div>
+							</div>
+							<div class="col-md-2">
+								<input id="duration" type="number" class="form-control"
+									placeholder="Duration (minutes)">
+								<div class="invalid-feedback">Duration must be greater
+									than 0</div>
+							</div>
+							<div class="col-md-2">
+								<input id="price" type="number" class="form-control"
+									placeholder="Price">
+								<div class="invalid-feedback">Price must be greater than 0</div>
+							</div>
+							<div class="col-md-2">
+							    <input id="serviceDiscount"
+							           type="number"
+							           class="form-control"
+							           placeholder="Discount %"
+							           min="0"
+							           max="100">
+<!-- 							           value="0"> -->
+							</div>												
+
+							<input type="hidden" id="serviceId">
+
+<!-- 						</div> -->
+<!-- 						<div class="row mb-3"> -->
+
+							<div class="col-md-2">
+								<button id="addServiceBtn" class="btn btn-success w-100"
+									onclick="addService()" disabled>Add / Update</button>
+							</div>
+
+
+						</div>
+					</div>
+				</div>
+
+				<!-- SERVICES LIST -->
+				<div class="card shadow">
+					<div class="card-header bg-dark text-white">Services</div>
+					<div class="card-body">
+
+						<table class="table table-bordered table-hover">
+							<thead class="table-secondary">
+								<tr>
+									<th>ID</th>
+									<th>Service Name</th>
+									<th>Category</th>
+									<th>Price</th>
+									<th>Discount</th>
+									<th>Duration</th>
+									<th>Action</th>
+								</tr>
+							</thead>
+							<tbody id="servicesTable">
+							</tbody>
+						</table>
+
+					</div>
+				</div>
+
+			</div>
+
+			<div class="tab-pane fade" id="usersTab">
+				<!-- <div class="tab-pane fade" id="usersTab"> -->
+
+				<!-- ADD / UPDATE USER CARD -->
+				<div class="card shadow mb-4">
+				    <div class="card-header bg-primary text-white">
+				        Add / Update User
+				    </div>
+				
+				    <div class="card-body">
+				        <div class="row mb-3">
+				
+				            <div class="col-md-3">
+				                <input id="userFullName" class="form-control"
+				                       placeholder="Full Name">
+				                <div class="invalid-feedback">Name is required</div>
+				            </div>
+				
+				            <div class="col-md-2">
+				                <input id="userEmail" class="form-control"
+				                       placeholder="Email">
+				                <div class="invalid-feedback">Email is required</div>
+				            </div>
+				
+				            <div class="col-md-2">
+				                <select id="userRole" class="form-select">
+				                	<option value="">Role</option>
+				                    <option value="ADMIN">ADMIN</option>
+				                    <option value="CUSTOMER">CUSTOMER</option>
+				                    <option value="PROFESSIONAL">PROFESSIONAL</option>
+				                </select>
+				                <div class="invalid-feedback">Role is required</div>
+				            </div>
+				
+				            <div class="col-md-2">
+				                <input id="userPassword" 
+				                       class="form-control"
+				                       placeholder="Password (optional)">
+				            </div>
+				
+				            <input type="hidden" id="userId">
+				
+				            <div class="col-md-3">
+				                <button id="addUserBtn"
+				                        class="btn btn-success w-100"
+				                        onclick="addOrUpdateUser()"
+				                        disabled>
+				                    Add / Update
+				                </button>
+				            </div>
+				
+				        </div>
+				    </div>
+				</div>
+
+
+				<div class="card shadow">
+					<div class="card-header bg-dark text-white">Users</div>
+					<div class="card-body">
+
+						<table class="table table-bordered table-hover">
+							<thead class="table-secondary">
+								<tr>
+									<th>ID</th>
+									<th>Name</th>
+									<th>Email</th>
+									<th>Role</th>
+									<th>Status</th>
+									<th>Action</th>
+								</tr>
+							</thead>
+
+							<tbody id="usersTable"></tbody>
+						</table>
+
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+
+	<!-- Bootstrap JS -->
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+	<!-- Common JS -->
+	<script src="api.js"></script>
+
+	<script>
 
 // Load services
 function loadServices() {
@@ -98,11 +268,34 @@ function loadServices() {
 
         data.forEach(s => {
             table.innerHTML += `
-                <tr>
+            	<tr class="${s.active ? "" : "table-secondary"}">
                     <td>${s.id}</td>
                     <td>${s.name}</td>
                     <td>${s.category}</td>
                     <td>₹ ${s.price}</td>
+                    <td>
+	                    ${s.discount > 0
+	                        ? `<span class="badge bg-success">${s.discount}%</span>`
+	                        : "—"}
+	                </td>
+                    <td>${formatDuration(s.duration)}</td>
+                    <td>
+                    <!--&nbsp;&nbsp;-->
+	                    
+                    	<button class="btn btn-sm btn-warning"
+	                            onclick="editService(${s.id}, '${s.name}', '${s.category}', ${s.price}, ${s.discount}, ${s.duration})">
+ 	                        &nbsp;&nbsp;
+	                        Edit 
+	                        &nbsp;&nbsp;
+	                    </button>
+	                    
+	                    &nbsp;&nbsp;
+	                    
+	                    <button class="btn btn-sm ${s.active ? "btn-danger" : "btn-success"}"
+			                    onclick="toggleService(${s.id})">
+			                ${s.active ? "Disable" : "Enable"}
+			            </button>
+	                </td>
                 </tr>
             `;
         });
@@ -111,23 +304,357 @@ function loadServices() {
 
 // Add service
 function addService() {
-    fetch("/api/admin/beauty-service", {
-        method: "POST",
+
+	if (!validateServiceForm()) {
+        showToast("Please fix highlighted fields", "warning");
+        return;
+    }
+	
+    const id = document.getElementById("serviceId").value;
+    const payload = {
+        name: document.getElementById("serviceName").value,
+        category: document.getElementById("category").value,
+        price: document.getElementById("price").value,
+        discount: Number(document.getElementById("serviceDiscount").value || 0),
+        duration: Number(document.getElementById("duration").value)        
+    };
+
+    const url = id
+        ? `/api/admin/beauty-service/${id}`
+        : "/api/admin/beauty-service";
+
+    const method = id ? "PUT" : "POST";
+
+    fetch(url, {
+        method: method,
         headers: authHeaders(),
-        body: JSON.stringify({
-            name: document.getElementById("serviceName").value,
-            category: document.getElementById("category").value,
-            price: document.getElementById("price").value            
-        })
+        body: JSON.stringify(payload)
     })
     .then(() => {
-        alert("Service added successfully");
+        showToast(id ? "Service updated successfully" : "Service added successfully");
+
+        document.getElementById("serviceId").value = "";
         document.getElementById("serviceName").value = "";
         document.getElementById("category").value = "";
         document.getElementById("price").value = "";
+        document.getElementById("serviceDiscount").value = "";
+        document.getElementById("duration").value = "";
+
+        clearServiceValidation();
+        checkAdminFormValidity(); // 🔥 disables button again
         loadServices();
+    })
+    .catch(() => showToast("Operation failed", "error"));
+}
+
+function addOrUpdateUser() {
+
+    if (!validateUserForm()) {
+        showToast("Please fix highlighted fields", "warning");
+        return;
+    }
+
+    const id = document.getElementById("userId").value;
+
+    const payload = {
+        fullName: document.getElementById("userFullName").value,
+        email: document.getElementById("userEmail").value,
+        userRole: document.getElementById("userRole").value
+        //active: document.getElementById("userActive").value === "true"
+    };
+
+    const password = document.getElementById("userPassword").value;
+    if (password) {
+        payload.password = password;
+    }
+
+    const url = id
+        ? `/api/admin/user/${id}`
+        : "/api/admin/user";
+
+    const method = id ? "PUT" : "POST";
+
+    fetch(url, {
+        method: method,
+        headers: authHeaders(),
+        body: JSON.stringify(payload)
+    })
+    .then(() => {
+        showToast(id ? "User updated successfully" : "User added successfully");
+
+        clearUserForm();
+        loadUsers();
+    })
+    .catch(() => showToast("Operation failed", "error"));
+}
+
+
+function editService(id, name, category, price, discount,  duration) {
+    document.getElementById("serviceId").value = id;
+    document.getElementById("serviceName").value = name;
+    document.getElementById("category").value = category;
+    document.getElementById("price").value = price;
+    document.getElementById("serviceDiscount").value = discount ?? 0;
+    document.getElementById("duration").value = duration;
+    
+    checkAdminFormValidity(); // 🔥 enable button
+}
+
+function editUser(id, name, email, role) {
+
+    document.getElementById("userId").value = id;
+    document.getElementById("userFullName").value = name;
+    document.getElementById("userEmail").value = email;
+    document.getElementById("userRole").value = role;
+    document.getElementById("userPassword").value = "";
+
+    checkUserFormValidity(); // enable button
+}
+
+
+function deleteService(id) {
+    showConfirm("Delete this service permanently?", () => {
+        fetch(`/api/admin/beauty-service/${id}`, {
+            method: "DELETE",
+            headers: authHeaders()
+        })
+        .then(() => {
+            showToast("Service deleted");
+            loadServices();
+        })
+        .catch(() => showToast("Delete failed", "error"));
     });
 }
+
+function clearServiceValidation() {
+    ["serviceName", "category", "price", "duration"].forEach(id => {
+        document.getElementById(id).classList.remove("is-invalid");
+    });
+}
+
+function validateServiceForm() {
+
+    clearServiceValidation();
+    let valid = true;
+
+    const name = document.getElementById("serviceName");
+    const category = document.getElementById("category");
+    const price = document.getElementById("price");
+    const duration = document.getElementById("duration");
+
+    if (!name.value.trim()) {
+        name.classList.add("is-invalid");
+        valid = false;
+    }
+
+    if (!category.value.trim()) {
+        category.classList.add("is-invalid");
+        valid = false;
+    }
+
+    if (!price.value || Number(price.value) <= 0) {
+        price.classList.add("is-invalid");
+        valid = false;
+    }
+
+    if (!duration.value || Number(duration.value) <= 0) {
+        duration.classList.add("is-invalid");
+        valid = false;
+    }
+
+    return valid;
+}
+
+function checkAdminFormValidity() {
+
+    const name = document.getElementById("serviceName")?.value.trim();
+    const category = document.getElementById("category")?.value.trim();
+    const price = Number(document.getElementById("price")?.value);
+    const duration = Number(document.getElementById("duration")?.value);
+
+    const btn = document.getElementById("addServiceBtn");
+    if (!btn) return;
+
+    btn.disabled = !(name && category && price > 0 && duration > 0);
+}
+
+function setupAdminLiveValidation() {
+
+    ["serviceName", "category", "price", "duration"].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        el.addEventListener("input", () => {
+            // remove red border while typing
+            el.classList.remove("is-invalid");
+
+            checkAdminFormValidity(); // 🔥 enable / disable button
+        });
+    });
+}
+
+function initAdminPage() {
+    loadNavbar();
+    loadServices();
+    //loadUsers();
+    setupAdminLiveValidation();
+}
+
+function toggleService(id) {
+    showConfirm("Change service availability?", () => {
+        fetch(`/api/admin/beauty-service/${id}/toggle`, {
+            method: "PUT",
+            headers: authHeaders()
+        })
+        .then(() => {
+            showToast("Service status updated");
+            loadServices();
+        })
+        .catch(() => showToast("Action failed", "error"));
+    });
+}
+
+
+function loadUsers() {
+    fetch("/api/admin/users", {
+        headers: authHeaders()
+    })
+    .then(res => res.json())
+    .then(users => {
+        const t = document.getElementById("usersTable");
+        t.innerHTML = "";
+
+        users.forEach(u => {
+            t.innerHTML += `
+                <tr class="${u.active ? "" : "table-secondary"}">
+                    <td>${u.userId}</td>
+                    <td>${u.fullName}</td>
+                    <td>${u.email}</td>
+                    <td>${u.userRole}</td>
+                    <td>
+                        <span class="badge bg-${u.active ? "success" : "secondary"}">
+                            ${u.active ? "Active" : "Disabled"}
+                        </span>
+                    </td>
+	            	<td>
+		                <button class="btn btn-sm btn-warning me-1"
+		                    onclick="editUser(
+		                        ${u.userId},
+		                        '${u.fullName}',
+		                        '${u.email}',
+		                        '${u.userRole}'
+		                    )">
+		                    Edit
+		                </button>
+		
+		                <button class="btn btn-sm ${u.active ? "btn-danger" : "btn-success"}"
+		                    onclick="toggleUser(${u.userId})">
+		                    ${u.active ? "Disable" : "Enable"}
+		                </button>
+		            </td>
+                </tr>
+            `;
+        });
+    });
+}
+
+function toggleUser(id) {
+    showConfirm("Change user access?", () => {
+        fetch(`/api/admin/user/${id}/toggle`, {
+            method: "PUT",
+            headers: authHeaders()
+        })
+        .then(async res => {
+
+            // ✅ success
+            if (res.ok) {
+                showToast("User status updated");
+                loadUsers();
+                return;
+            }
+
+            // ❌ error – read backend message
+            let msg = "Operation failed";
+
+            try {
+                const body = await res.json();
+                if (body.error) {
+                    msg = body.error;
+                }
+            } catch {
+                // ignore parse errors
+            }
+
+            throw new Error(msg);
+        })
+        .catch(err => {
+            showToast(err.message, "warning");
+        });
+    });
+}
+
+
+function clearUserForm() {
+    ["userId","userFullName","userEmail","userRole","userPassword"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+    });
+    //document.getElementById("userActive").value = "true";
+    clearUserValidation();
+    document.getElementById("addUserBtn").disabled = true;
+}
+
+function clearUserValidation() {
+    ["userFullName","userEmail","userRole"].forEach(id => {
+        document.getElementById(id).classList.remove("is-invalid");
+    });
+}
+
+function validateUserForm() {
+
+    clearUserValidation();
+    let valid = true;
+
+    if (!userFullName.value.trim()) {
+        userFullName.classList.add("is-invalid");
+        valid = false;
+    }
+
+    if (!userEmail.value.trim()) {
+        userEmail.classList.add("is-invalid");
+        valid = false;
+    }
+
+    if (!userRole.value) {
+        userRole.classList.add("is-invalid");
+        valid = false;
+    }
+
+    return valid;
+}
+
+function checkUserFormValidity() {
+
+    const name = userFullName.value.trim();
+    const email = userEmail.value.trim();
+    const role = userRole.value;
+
+    addUserBtn.disabled = !(name && email && role);
+}
+
+["userFullName","userEmail","userRole"].forEach(id => {
+    document.getElementById(id).addEventListener("input", () => {
+        document.getElementById(id).classList.remove("is-invalid");
+        checkUserFormValidity();
+    });
+});
+
+
+document
+.querySelector('[data-bs-target="#usersTab"]')
+.addEventListener("shown.bs.tab", loadUsers);
+
+
 </script>
 
 </body>

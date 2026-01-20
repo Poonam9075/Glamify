@@ -17,7 +17,11 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(nullable = false, unique = true)
     private String phone;
+    
     private String password;
     private String userRole; // ADMIN, CUSTOMER, PROFESSIONAL
+    
+    private boolean active = true;
 }

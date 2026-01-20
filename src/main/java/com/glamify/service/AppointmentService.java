@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -52,21 +54,24 @@ public class AppointmentService {
         Customer customer = customerRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
-        Professional professional = professionalRepo.findAll().get(0);
-
         Appointment appointment = new Appointment();
         appointment.setCustomer(customer);
-        appointment.setProfessional(professional);
         appointment.setLocation(req.getLocation());
-        appointment.setDateTime(LocalDateTime.parse(req.getDateTime()));
+        appointment.setDateTime(req.getDateTime());
         appointment.setStatus(AppointmentStatus.CREATED);
+
+        // 🚫 NO professional assignment here
 
         Appointment saved = appointmentRepo.save(appointment);
 
-        double total = 0;
+        double totalPrice = 0;        
+        double totalDiscount = 0;
+        double totalDiscountedPrice = 0;
 
+        Map<String, Integer> serviceDiscountSnapshot = new HashMap<>();
+
+        
         for (Long serviceId : req.getServiceIds()) {
-
             BeautyService service = serviceRepo.findById(serviceId)
                     .orElseThrow(() -> new RuntimeException("Service not found"));
 
@@ -77,18 +82,48 @@ public class AppointmentService {
             bs.setEstimatedTime(service.getDuration());
 
             bookedServiceRepo.save(bs);
-
-            total += service.getPrice();
+            
+            double price = service.getPrice();
+            int discount = service.getDiscount();
+            double discountedPrice = price - (price * discount / 100.0);
+            
+            totalPrice += price;
+            totalDiscount += discount;
+            totalDiscountedPrice += discountedPrice;
+            
+            serviceDiscountSnapshot.put(service.getName(), service.getDiscount());
         }
 
         Invoice invoice = new Invoice();
         invoice.setAppointment(saved);
-        invoice.setTotal(total);
-        invoice.setFinalAmount(total);
+        invoice.setTotal(totalPrice);
+        invoice.setCouponDiscount(totalDiscount);
+        invoice.setFinalAmount(totalDiscountedPrice);
         invoice.setDateTime(LocalDateTime.now());
         invoiceRepo.save(invoice);
 
         return saved;
+    }
+
+    public Appointment acceptAppointmentByProfessional(Long appointmentId) {
+
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        Professional professional = professionalRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Professional not found"));
+
+        Appointment appointment = appointmentRepo.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (appointment.getProfessional() != null) {
+            throw new RuntimeException("Appointment already assigned");
+        }
+
+        appointment.setProfessional(professional);
+        appointment.setStatus(AppointmentStatus.ACCEPTED);
+
+        return appointmentRepo.save(appointment);
     }
 
 

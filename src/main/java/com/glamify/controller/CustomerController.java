@@ -4,6 +4,7 @@ import com.glamify.dto.CustomerBookingRequest;
 import com.glamify.entity.*;
 import com.glamify.repository.AppointmentRepository;
 import com.glamify.repository.BeautyServiceRepository;
+import com.glamify.repository.UserRepository;
 import com.glamify.service.AppointmentService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -16,14 +17,17 @@ public class CustomerController {
 
     private final AppointmentService appointmentService;
     private final AppointmentRepository appointmentRepo;
+    private final UserRepository userRepo;
     private final BeautyServiceRepository beautyServiceRepository;
 
     // ✅ SINGLE CONSTRUCTOR (CORRECT)
     public CustomerController(AppointmentService appointmentService,
                               AppointmentRepository appointmentRepo,
-                              BeautyServiceRepository beautyServiceRepository) {
+                              BeautyServiceRepository beautyServiceRepository,
+                              UserRepository userRepo) {
         this.appointmentService = appointmentService;
         this.appointmentRepo = appointmentRepo;
+        this.userRepo = userRepo;
         this.beautyServiceRepository = beautyServiceRepository;
     }
 
@@ -32,7 +36,7 @@ public class CustomerController {
     // =================================================
     @GetMapping("/services")
     public List<BeautyService> getAllServices() {
-        return beautyServiceRepository.findAll();
+        return beautyServiceRepository.findByActiveTrue();
     }
 
     // =================================================
@@ -53,8 +57,12 @@ public class CustomerController {
 
         String email = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
+        
+        User user = userRepo.findByEmail(email)
+                .orElseThrow();
 
-        return appointmentRepo.findByCustomerEmail(email);
+        return appointmentRepo.findByCustomerUserId(user.getUserId());
+
     }
 
     // =================================================

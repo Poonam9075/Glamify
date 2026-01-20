@@ -1,4 +1,4 @@
-package com.glamify.controller;
+package com.glamify.dto;
 
 import lombok.Data;
 

@@ -1,235 +1,796 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="UTF-8">
+	<meta charset="UTF-8">	
+	<title>Customer Dashboard</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	
-    <title>Customer Dashboard</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+	<!-- Bootstrap FIRST -->
+	<link
+	  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+	  rel="stylesheet">
+	<link rel="stylesheet"
+		href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+	
+	<!-- Your styles LAST -->
+	<link rel="stylesheet" href="/styles.css">
+	
+	<link rel="icon" href="data:,">
+	
 </head>
 
-<body onload="requireAuth(); initPage();">
+<!-- Booking Summary Modal -->
+<div class="modal fade" id="summaryModal" tabindex="-1">
+	<div class="modal-dialog modal-lg modal-dialog-centered">
+		<div class="modal-content">
 
-<!-- NAVBAR -->
-<div id="navbar"></div>
+			<div class="modal-header bg-dark text-white">
+				<h5 class="modal-title">
+					<i class="bi bi-receipt me-2"></i> Confirm Appointment
+				</h5>
 
-<div class="container mt-4">
+				<button type="button" class="btn-close btn-close-white"
+					data-bs-dismiss="modal"></button>
+			</div>
 
-    <h3 class="mb-4">My Appointments</h3>
+			<div class="modal-body">
 
-    <!-- APPOINTMENT TABLE -->
-    <div class="card shadow mb-4">
-        <div class="card-body">
-            <table class="table table-bordered table-hover align-middle">
-                <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Date & Time</th>
-                    <th>Location</th>
-                    <th>Status</th>
-                    <th>Service</th>
-                    <th>Professional</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody id="appointmentsTable"></tbody>
-            </table>
-        </div>
-    </div>
+				<p>
+					<strong>Location:</strong> <span id="sumLocation"></span>
+				</p>
+				<p>
+					<strong>Date & Time:</strong> <span id="sumDateTime"></span>
+				</p>
 
-    <!-- BOOK APPOINTMENT -->
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-            Book New Appointment
-        </div>
-        <div class="card-body">
+				<hr>
 
-            <!-- LOCATION -->
-            <div class="mb-3">
-                <label class="form-label">Location</label>
-                <input type="text" id="location"
-                       class="form-control"
-                       placeholder="City / Address">
-            </div>
+				<h6>Selected Services</h6>
+				<ul id="sumServices" class="list-group mb-3"></ul>
 
-            <!-- TIME SLOT -->
-            <div class="mb-3">
-                <label class="form-label">Time Slot</label>
-                <select id="timeSlot" class="form-select">
-				    <option value="2025-02-01T10:00:00">10:00 AM – 12:00 PM</option>
-				    <option value="2025-02-01T12:00:00">12:00 PM – 2:00 PM</option>
-				    <option value="2025-02-01T14:00:00">2:00 PM – 4:00 PM</option>
-				    <option value="2025-02-01T16:00:00">4:00 PM – 6:00 PM</option>
-				</select>
-            </div>
+<!-- 				<div class="d-flex justify-content-between"> -->
+<!-- 					<strong>Total Time:</strong> <span id="sumDuration"></span> -->
+<!-- 				</div> -->
 
-            <!-- SERVICE DROPDOWN (DB DATA) -->
-            <div class="mb-3">
-                <label class="form-label">Required Service</label>
-                <select id="serviceSelect" class="form-select" multiple size="5"></select>
-            </div>
+				<hr>
+				
+				<div class="mb-1 d-flex justify-content-between">
+				    <strong>Total Amount:</strong>
+				    <span id="sumTotalAmount"></span>
+				</div>
+				
+				<div class="mb-1 d-flex justify-content-between">
+				    <strong>Total Discount:</strong>
+				    <span id="sumTotalDiscount"></span>
+				</div>
+				
+				<div class="mb-1 d-flex justify-content-between fs-5">
+				    <strong>Payable Amount:</strong>
+				    <span id="sumPayableAmount"></span>
+				</div>
+				
+				<div class="mb-1 d-flex justify-content-between">
+				    <strong>Total Time:</strong>
+				    <span id="sumDuration"></span>
+				</div>
 
-            <button class="btn btn-success" onclick="bookAppointment()">
-                Book Appointment
-            </button>
 
-        </div>
-    </div>
+			</div>
+
+			<div class="modal-footer">
+				<button class="btn btn-secondary" data-bs-dismiss="modal">
+					Cancel</button>
+				<button class="btn btn-success" onclick="confirmBooking()">
+					Confirm Booking</button>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+
+			<div class="modal-header bg-dark text-white">
+				<h5 class="modal-title">Confirm Action</h5>
+				<button type="button" class="btn-close btn-close-white"
+					data-bs-dismiss="modal"></button>
+			</div>
+
+			<div class="modal-body">
+				<p id="confirmMessage" class="mb-0"></p>
+			</div>
+
+			<div class="modal-footer">
+				<button class="btn btn-secondary" data-bs-dismiss="modal">
+					No</button>
+				<button class="btn btn-danger" id="confirmYesBtn">Yes,
+					Continue</button>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+
+	<div id="appToast"
+		class="toast align-items-center text-white bg-success border-0"
+		role="alert" aria-live="assertive" aria-atomic="true">
+
+		<div class="d-flex">
+			<div class="toast-body d-flex align-items-center">
+				<span id="toastIcon" class="me-2 fs-5">✅</span> <span
+					id="toastMessage">Message</span>
+			</div>
+
+			<button type="button" class="btn-close btn-close-white me-2 m-auto"
+				data-bs-dismiss="toast"></button>
+		</div>
+
+	</div>
 
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Common JS -->
-<script src="api.js"></script>
+<!-- <body onload="requireAuth(); setupLiveValidation(); initPage();"> -->
+<body onload="requireAuth(); setupLiveValidation(); initPage();">
 
-<script>
-/* ===========================
-   INIT
-   =========================== */
+	<!-- Navbar -->
+	<div id="navbar"></div>
 
-fetch("/navbar.html")
-    .then(res => res.text())
-    .then(html => document.getElementById("navbar").innerHTML = html);
+	<div class="container mt-4">
 
-function initPage() {
-    loadServices();
-    loadAppointments();
-}
+		<!-- Tabs -->
+		<ul class="nav nav-tabs mb-3" id="customerTabs" role="tablist">
+			<li class="nav-item">
+		        <button class="nav-link active" data-bs-toggle="tab"
+			        data-bs-target="#catalogTab" type="button">
+		            <i class="bi bi-grid-3x3-gap me-1"></i> Service Catalog
+		        </button>
+		    </li>
+			<li class="nav-item">
+				<button class="nav-link" data-bs-toggle="tab"
+					data-bs-target="#bookTab" type="button">
+					<i class="bi bi-plus-circle me-1"></i> Book Appointment
+				</button>
+			</li>
+			<li class="nav-item">
+				<button class="nav-link" data-bs-toggle="tab"
+					data-bs-target="#appointmentsTab" type="button">
+					<i class="bi bi-calendar-check me-1"></i> My Appointments
+				</button>
+			</li>
+		</ul>
 
-/* ===========================
-   LOAD SERVICES FROM DB
-   =========================== */
+		<!-- Tab Content -->
+		<div class="tab-content">
 
-function loadServices() {
-    fetch("/api/customer/services", {
-        headers: authHeaders()
-    })
-    .then(res => {
-        console.log("SERVICE API STATUS:", res.status);
-        return res.json();
-    })
-    .then(services => {
-        console.log("SERVICES FROM DB:", services);
 
-        const select = document.getElementById("serviceSelect");
-        select.innerHTML = "";
+			<div class="tab-pane fade show active" id="catalogTab">
+			    <div class="row" id="serviceCatalog"></div>
+			</div>
+						
 
-        if (services.length === 0) {
-            const opt = document.createElement("option");
-            opt.text = "No services available";
-            opt.disabled = true;
-            select.appendChild(opt);
-            return;
-        }
+			<div class="tab-pane fade" id="bookTab">
 
-        services.forEach(s => {
-            const opt = document.createElement("option");
-            opt.value = s.id;
-            opt.text = s.name + " (₹" + s.price + ")";
-            select.appendChild(opt);
-        });
-    })
-    .catch(err => console.error("SERVICE LOAD ERROR", err));
-}
+				<!-- BOOK APPOINTMENT -->
+				<div class="card shadow">
+<!-- 					<div class="card-header bg-success text-white"> -->
+<!-- 						<i class="bi bi-plus-circle me-2"></i> Book New Appointment -->
+<!-- 					</div> -->
+					<div class="card-body">
 
-/* ===========================
-   LOAD APPOINTMENTS
-   =========================== */
+						<div class="row">
+							<!-- Date -->
+							<div class="col-md-6 mb-3">
+								<label>Date</label> <input type="date" id="date"
+									class="form-control">
+								<div id="dateError" class="invalid-feedback">Date is
+									required</div>
+							</div>
 
+							<!-- Time Slot -->
+							<div class="col-md-6 mb-3">
+								<label>Time Slot</label> <select id="time" class="form-select">
+									<option value="">-- Select Time Slot --</option>
+									<option value="10:00">10:00 AM</option>
+									<option value="12:00">12:00 PM</option>
+									<option value="14:00">02:00 PM</option>
+									<option value="16:00">04:00 PM</option>
+								</select>
+								<div id="timeError" class="invalid-feedback">Time slot is
+									required</div>
+							</div>
+						</div>
+
+						<div class="mb-3">
+							<label>Location</label> <input id="location" class="form-control"
+								placeholder="City / Address">
+							<div id="locationError" class="invalid-feedback">Location
+								is required</div>
+						</div>
+
+<!-- 						<div class="mb-3"> -->
+<!-- 							<label>Required Service</label> -->
+<!-- 							<div class="input-group"> -->
+<!-- 								<select id="serviceSelect" class="form-select"></select>&nbsp;&nbsp;&nbsp;&nbsp; -->
+<!-- 								<button class="btn btn-primary" onclick="addToCart()">Add</button> -->
+<!-- 								<div id="cartError" class="text-danger small d-none"> -->
+<!-- 									Please add at least one service</div> -->
+<!-- 							</div> -->
+<!-- 						</div> -->
+
+						<!-- CART -->
+						<div class="card mt-3">
+							<div class="card-header bg-dark text-white">
+								<i class="bi bi-bag-check me-2"></i> Selected Services
+							</div>
+
+							<div class="card-body">
+								<table class="table table-sm">
+									<tbody id="cartTable"></tbody>
+								</table>
+
+								<div class="fw-bold mt-2">
+								    <div>Total Amount: ₹<span id="totalAmount">0</span></div>
+								    <div>Total Discount: ₹<span id="totalDiscount">0</span></div>
+								    <div class="fs-5">
+								        Payable Amount: ₹<span id="totalPayable">0</span>
+								    </div>
+								    <div class="mt-1">
+								        Total Time: <span id="totalTime">0 mins</span>
+								    </div>
+								</div>
+							</div>
+						</div>
+
+						<br>
+						<button id="bookBtn" class="btn btn-success"
+							onclick="openSummaryModal()" disabled>Book Appointment</button>
+
+					</div>
+				</div>
+			</div>
+
+			<div class="tab-pane fade" id="appointmentsTab">
+				<div class="card shadow mb-4">
+<!-- 					<div class="card-header bg-primary text-white"> -->
+<!-- 						<i class="bi bi-calendar-check me-2"></i> My Appointments -->
+<!-- 					</div> -->
+					<div class="card-body">
+						<div class="table-responsive">
+							<table class="table table-bordered">
+								<thead>
+									<tr>
+										<th>ID</th>
+										<th class="sortable">Date & Time</th>
+										<th class="sortable">Location</th>
+										<th class="sortable">Status</th>
+										<th class="sortable">Customer</th>
+										<th class="sortable">Services</th>
+										<th class="sortable">Total Time</th>										
+										<th class="sortable">Professional</th>
+										<th>Action</th>
+									</tr>
+								</thead>
+
+								<tbody id="appointmentsTable"></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- tab-content -->
+	</div>
+	<!-- container -->
+
+
+	<!-- JS -->
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="api.js"></script>
+
+	<script>
+let cart = [];
+let summaryModalInstance;
+
+
+// -------- APPOINTMENTS --------
 function loadAppointments() {
-    fetch("/api/customer/appointments", {
-        headers: authHeaders()
-    })
-    .then(res => res.json())
-    .then(data => {
-        const t = document.getElementById("appointmentsTable");
-        t.innerHTML = "";
+    fetch("/api/customer/appointments", { headers: authHeaders() })
+        .then(r => r.json())
+        .then(data => {
+            const t = document.getElementById("appointmentsTable");
+            t.innerHTML = "";
 
-        data.forEach(a => {
-            let badge = "secondary";
-            if (a.status === "CREATED") badge = "warning";
-            if (a.status === "ACCEPTED") badge = "info";
-            if (a.status === "IN_PROGRESS") badge = "primary";
-            if (a.status === "COMPLETED") badge = "success";
-            if (a.status === "CANCELLED") badge = "danger";
+            data.forEach(a => {
+            	const serviceNames = a.bookedServices
+	                ? a.bookedServices.map(bs => bs.beautyService.name).join(",")
+	                : "";
+	
+	            const serviceCount = a.bookedServices ? a.bookedServices.length : 0;
+	
+	            const services = serviceCount > 0
+	                ? `<span class="badge bg-secondary rounded-pill service-badge"
+	                         role="button"
+	                         tabindex="0"
+	                         data-services="${serviceNames}">
+	                       ${serviceCount}
+	                   </span>`
+	                : "";
 
-            let action = "";
-            if (a.status === "CREATED" || a.status === "ACCEPTED") {
-                action = `
-                    <button class="btn btn-sm btn-danger"
-                            onclick="cancelAppointment(${a.appointmentId})">
-                        Cancel
-                    </button>`;
-            }
+                const totalMinutes = a.bookedServices
+                ? a.bookedServices.reduce(
+                    (sum, bs) => sum + bs.estimatedTime, 0)
+                : 0;
 
-            t.innerHTML += `
+
+                let action = "";
+
+                if (a.status === "CREATED" || a.status === "ACCEPTED") {
+                    action = `<button class="btn btn-sm btn-danger"
+                              onclick="cancel(${a.appointmentId})">Cancel</button>`;
+                }
+
+                t.innerHTML += `
                 <tr>
                     <td>${a.appointmentId}</td>
-                    <td>${a.dateTime}</td>
+                    <td data-value="${new Date(a.dateTime).getTime()}">
+	                    ${formatDateTime(a.dateTime)}
+	                </td>
                     <td>${a.location}</td>
-                    <td><span class="badge bg-${badge}">${a.status}</span></td>
-                    <td>
-                      ${
-                         a.bookedServices
-                           ? a.bookedServices.map(bs => bs.beautyService.name).join(", ")
-                           : ""
-                       }
-                    </td>
-                    <td>${a.professional?.fullName || "Auto Assigned"}</td>
+                    <td>${getStatusBadge(a.status)}</td>
+                    <td>${a.customer?.fullName || "—"}</td>
+                    <td>${services}</td>
+                    <td data-value="${totalMinutes}">
+	                        ${formatDuration(totalMinutes)}
+	                    </td>	                
+                    <td>${a.professional?.fullName || "—"}</td>
+
                     <td>${action}</td>
-                </tr>
-            `;
+                </tr>`;
+            });
+            
+            makeTableSortable(
+            	    document.querySelector("#appointmentsTable").closest("table")
+            	);
+            
+            initServicePopovers();
+        });
+
+}
+
+function cancel(id) {
+    showConfirm("Cancel this appointment?", () => {
+        fetch(`/api/customer/appointment/${id}/cancel`, {
+            method: "PUT",
+            headers: authHeaders()
+        })
+        .then(() => {
+            showToast("Appointment cancelled");
+            loadAppointments();
         });
     });
 }
 
-/* ===========================
-   BOOK APPOINTMENT
-   =========================== */
+// -------- SERVICES --------
+// function loadServices() {
+//     fetch("/api/customer/services", { headers: authHeaders() })
+//         .then(r => r.json())
+//         .then(data => {
+//             const s = document.getElementById("serviceSelect");
+//             s.innerHTML = `<option value="">-- Select --</option>`;
 
-   function bookAppointment() {
-	    const serviceSelect = document.getElementById("serviceSelect");
+//             data.forEach(x => {
+//                 s.innerHTML += `
+//                 <option value="${x.id}"
+//                         data-price="${x.price}"
+//                        	data-discount="${x.discount}"
+//                         data-time="${x.duration}">
+//                     ${x.name} ${x.discount > 0
+//                         ? `(₹${x.price} → ₹${x.price - (x.price * x.discount / 100)})`
+//                                 : `(₹${x.price})`}
+//                 </option>`;
+//             });
+//         });
+// }
 
-	    const serviceIds = Array.from(serviceSelect.selectedOptions)
-	                            .map(opt => Number(opt.value));
+// // -------- CART --------
+// function addToCart() {
 
-	    const body = {
-	        location: document.getElementById("location").value,
-	        dateTime: document.getElementById("timeSlot").value,
-	        serviceIds: serviceIds
-	    };
+//     const select = document.getElementById("serviceSelect");
+//     const sel = select.options[select.selectedIndex];
 
-	    console.log("BOOK PAYLOAD:", body);
+//     if (!sel.value) {
+//         showToast("Please select a service", "warning");
+//         return;
+//     }
 
-	    fetch("/api/customer/appointment", {
-	        method: "POST",
-	        headers: authHeaders(),
-	        body: JSON.stringify(body)
-	    })
-	    .then(res => res.json())
-	    .then(() => {
-	        alert("Appointment booked successfully");
-	        loadAppointments();
-	    });
-	}
+//     const serviceId = Number(sel.value); // 🔥 FIX
+
+//     if (cart.some(c => c.serviceId === serviceId)) {
+//         showToast("Service already added", "warning");
+//         select.selectedIndex = 0;
+//         return;
+//     }
+
+//     const price = Number(sel.dataset.price);
+//     const discount = Number(sel.dataset.discount || 0);
+
+//     const finalPrice = price - (price * discount / 100);
+
+//     cart.push({
+//         serviceId: serviceId,
+//         name: sel.textContent.split("(")[0].trim(),
+//         price: finalPrice,          // ✅ discounted price
+//         originalPrice: price,       // optional (for UI)
+//         discount: discount,
+//         time: Number(sel.dataset.time)
+//     });
+
+//     renderCart();
+//     select.selectedIndex = 0;
+//     checkFormValidity();
+// }
 
 
-/* ===========================
-   CANCEL
-   =========================== */
-
-function cancelAppointment(id) {
-    if (!confirm("Cancel this appointment?")) return;
-
-    fetch(`/api/customer/appointment/${id}/cancel`, {
-        method: "PUT",
-        headers: authHeaders()
-    }).then(loadAppointments);
+function removeFromCart(id) {
+    cart = cart.filter(c => c.serviceId !== Number(id));
+    renderCart();
+    checkFormValidity();
 }
+
+
+function renderCart() {
+    const t = document.getElementById("cartTable");
+    t.innerHTML = "";
+
+    let totalAmount = 0;
+    let payableAmount = 0;
+    let totalTime = 0;
+
+    cart.forEach(c => {
+        totalAmount += c.originalPrice;
+        payableAmount += c.price;
+        totalTime += c.time;
+
+        t.innerHTML += `
+        <tr>
+            <td>${c.name}</td>
+            <td>
+                ₹${c.price.toFixed(2)}
+                ${c.discount > 0
+                    ? `<br><small class="text-muted">${c.discount}% off</small>`
+                    : ""}
+            </td>
+            <td>${formatDuration(c.time)}</td>
+            <td>
+                <button class="btn btn-sm btn-danger"
+                        onclick="removeFromCart(${c.serviceId})">
+                    Remove
+                </button>
+            </td>
+        </tr>`;
+    });
+
+    const totalDiscount = totalAmount - payableAmount;
+
+    document.getElementById("totalAmount").innerText =
+        totalAmount.toFixed(2);
+
+    document.getElementById("totalDiscount").innerText =
+        totalDiscount.toFixed(2);
+
+    document.getElementById("totalPayable").innerText =
+        payableAmount.toFixed(2);
+
+    document.getElementById("totalTime").innerText =
+        formatDuration(totalTime);
+}
+
+
+function openSummaryModal() {
+
+    // reuse existing validation
+    clearValidation();
+    let valid = true;
+
+    const location = document.getElementById("location");
+    const date = document.getElementById("date");
+    const time = document.getElementById("time");
+
+    if (!location.value.trim()) {
+        location.classList.add("is-invalid");
+        locationError.style.display = "block";
+        valid = false;
+    }
+    if (!date.value) {
+        date.classList.add("is-invalid");
+        dateError.style.display = "block";
+        valid = false;
+    }
+    if (!time.value) {
+        time.classList.add("is-invalid");
+        timeError.style.display = "block";
+        valid = false;
+    }
+//     if (cart.length === 0) {
+//         cartError.classList.remove("d-none");
+//         valid = false;
+//     }
+
+    if (!valid) return;
+
+    // Fill modal
+    document.getElementById("sumLocation").innerText = location.value;
+    document.getElementById("sumDateTime").innerText =
+        `${date.value} ${time.value}`;
+
+    const serviceList = document.getElementById("sumServices");
+    serviceList.innerHTML = "";
+
+    let totalAmount = 0;
+    let payableAmount = 0;
+    let totalTime = 0;
+
+    cart.forEach(s => {
+        totalAmount += s.originalPrice;
+        payableAmount += s.price;
+        totalTime += s.time;
+
+        serviceList.innerHTML += `
+            <li class="list-group-item d-flex justify-content-between">
+                <span>
+                    ${s.name}
+                    ${s.discount > 0
+                        ? `<small class="text-muted">(${s.discount}% off)</small>`
+                        : ""}
+                </span>
+                <span>₹${s.price.toFixed(2)}</span>
+            </li>`;
+    });
+
+    const totalDiscount = totalAmount - payableAmount;
+
+    document.getElementById("sumTotalAmount").innerText =
+        `₹${totalAmount.toFixed(2)}`;
+
+    document.getElementById("sumTotalDiscount").innerText =
+        `₹${totalDiscount.toFixed(2)}`;
+
+    document.getElementById("sumPayableAmount").innerText =
+        `₹${payableAmount.toFixed(2)}`;
+
+    document.getElementById("sumDuration").innerText =
+        formatDuration(totalTime);
+
+
+    summaryModalInstance = new bootstrap.Modal(
+            document.getElementById("summaryModal")
+        );
+    summaryModalInstance.show();
+}
+
+
+// -------- BOOK --------
+function confirmBooking() {
+
+	clearValidation();
+    let valid = true;
+
+    const location = document.getElementById("location");
+    const date = document.getElementById("date");
+    const time = document.getElementById("time");
+
+    if (!location.value.trim()) {
+        location.classList.add("is-invalid");
+        locationError.style.display = "block";
+        valid = false;
+    }
+
+    if (!date.value) {
+        date.classList.add("is-invalid");
+        dateError.style.display = "block";
+        valid = false;
+    }
+
+    if (!time.value) {
+        time.classList.add("is-invalid");
+        timeError.style.display = "block";
+        valid = false;
+    }
+
+//     if (cart.length === 0) {
+//         document.getElementById("cartError").classList.remove("d-none");
+//         valid = false;
+//     }
+
+    if (!valid) return;
+	
+    // 1️⃣ Validate cart
+    if (!cart || cart.length === 0) {
+        showToast("Please add at least one service", "warning");
+        return;
+    }
+
+    // 3️⃣ Extract VALID service IDs
+    const serviceIds = cart
+        .map(c => Number(c.serviceId))
+        .filter(id => !isNaN(id));
+
+    if (serviceIds.length === 0) {
+        showToast("No valid services selected", "error");
+        return;
+    }
+
+    // 4️⃣ Prepare payload (exact backend match)
+    const payload = {
+        location: location.value,
+        dateTime: `${date.value}T${time.value}:00`,
+        serviceIds: serviceIds
+    };
+
+    // 5️⃣ Call API
+    fetch("/api/customer/appointment", {
+        method: "POST",
+        headers: {
+            ...authHeaders(),
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Booking failed");
+        return res.json();
+    })
+    .then(() => {
+        showToast("Appointment booked successfully");
+        cart = [];            // clear cart
+        renderCart();         // refresh cart UI
+        loadAppointments();   // refresh appointments table
+        summaryModalInstance.hide(); // ✅ CLOSE SUMMARY MODAL
+    })
+    .catch(() => {
+        showToast("Failed to book appointment", "error");
+    });
+}
+
+function clearValidation() {
+    ["location", "date", "time"].forEach(id => {
+        document.getElementById(id).classList.remove("is-invalid");
+    });
+
+    ["locationError", "dateError", "timeError"].forEach(id => {
+        document.getElementById(id).style.display = "none";
+    });
+
+//     document.getElementById("cartError").classList.add("d-none");
+}
+
+function setupLiveValidation() {
+    ["location", "date", "time"].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        el.addEventListener("input", () => {
+            if (el.value && el.value.trim() !== "") {
+                el.classList.remove("is-invalid");
+                const err = document.getElementById(id + "Error");
+                if (err) err.style.display = "none";
+            }
+            checkFormValidity();
+        });
+    });
+}
+
+function checkFormValidity() {
+    const location = document.getElementById("location")?.value.trim();
+    const date = document.getElementById("date")?.value;
+    const time = document.getElementById("time")?.value;
+    const hasServices = cart && cart.length > 0;
+
+    const btn = document.getElementById("bookBtn");
+    if (!btn) return;
+
+	 // Enable button as soon as cart has items
+    btn.disabled = !hasServices;
+}
+
+function initPage() {
+    loadNavbar();
+    clearValidation();
+    loadAppointments();
+//     loadServices();
+    loadServiceCatalog();
+}
+
+function loadServiceCatalog() {
+    fetch("/api/customer/services", { headers: authHeaders() })
+        .then(r => r.json())
+        .then(data => {
+            const container = document.getElementById("serviceCatalog");
+            container.innerHTML = "";
+
+            data.forEach(s => {
+                const discountedPrice =
+                    s.discount > 0
+                        ? s.price - (s.price * s.discount / 100)
+                        : s.price;
+
+                container.innerHTML += `
+                <div class="col-md-4 col-lg-3 mb-4">
+                    <div class="card h-100 shadow-sm service-card">
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title">${s.name}</h6>
+
+                            <p class="text-muted small mb-1">
+                                Duration: ${s.duration} mins
+                            </p>
+
+                            ${
+                                s.discount > 0
+                                ? `<span class="badge bg-success mb-2">
+                                       ${s.discount}% OFF
+                                   </span>`
+                                : ""
+                            }
+
+                            <div class="mt-auto">
+                                ${
+                                    s.discount > 0
+                                    ? `<div>
+                                           <small class="text-muted text-decoration-line-through">
+                                               ₹${s.price}
+                                           </small>
+                                           <span class="fw-bold ms-2">
+                                               ₹${discountedPrice}
+                                           </span>
+                                       </div>`
+                                    : `<div class="fw-bold">₹${s.price}</div>`
+                                }
+
+                                <button class="btn btn-outline-primary btn-sm w-100 mt-2"
+                                        onclick="addServiceFromCatalog(${s.id}, '${s.name}', ${s.price}, ${s.discount}, ${s.duration})">
+                                    <i class="bi bi-cart-plus"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+        });
+}
+
+function addServiceFromCatalog(id, name, price, discount, duration) {
+
+    if (cart.some(c => c.serviceId === id)) {
+        showToast("Service already added", "warning");
+        return;
+    }
+
+    const finalPrice = price - (price * discount / 100);
+
+    cart.push({
+        serviceId: id,
+        name: name,
+        price: finalPrice,
+        originalPrice: price,
+        discount: discount,
+        time: duration
+    });
+
+    renderCart();
+    checkFormValidity();
+    showToast("Service added to cart");
+}
+
+
+
 </script>
 
 </body>

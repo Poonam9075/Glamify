@@ -37,6 +37,7 @@ public class JwtUtil {
 
     // =================================================
     // VALIDATE TOKEN
+    // will be called by custom JWT filter
     // =================================================
     public Claims validateToken(String token) {
 

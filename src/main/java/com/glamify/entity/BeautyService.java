@@ -17,5 +17,7 @@ public class BeautyService {
     private String name;
     private String category;
     private double price;
-    private int duration; // minutes
+    private int duration;
+    private int discount;    
+    private boolean active = true;
 }

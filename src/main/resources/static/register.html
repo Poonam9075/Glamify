@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Glamify | Register</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- App styles -->
+    <link rel="stylesheet" href="/styles.css">
+    
+    <style>
+	    body {
+	        background: linear-gradient(120deg, #e0e0e0, #9e9e9e);
+	        min-height: 100vh;
+	    }
+	    
+		    .btn-primary {
+		    background-color: #616161 !important;
+		    border-color: #616161 !important;
+		}
+		
+		.btn-primary:hover,
+		.btn-primary:focus {
+		    background-color: #424242 !important;
+		    border-color: #424242 !important;
+		}	
+	</style>
+	
+</head>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1100">
+
+    <div id="appToast"
+         class="toast align-items-center text-white bg-success border-0"
+         role="alert" aria-live="assertive" aria-atomic="true">
+
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center">
+                <span id="toastIcon" class="me-2 fs-5">ℹ️</span>
+                <span id="toastMessage">Message</span>
+            </div>
+
+            <button type="button"
+                    class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<body>
+
+
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+
+    <div class="card auth-card">
+
+        <!-- Header -->
+        <div class="card-header text-center bg-dark text-white login-card-header">
+            <img src="/images/glamify-logo.png"
+                 alt="Glamify"
+                 class="login-logo">
+        </div>
+
+        <!-- Body -->
+        <div class="card-body">
+
+            <h5 class="text-center mb-3">Create Account</h5>
+
+            <div class="mb-3">
+                <label class="form-label">Full Name</label>
+                <input id="fullName" type="text" class="form-control" placeholder="Your name">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input id="email" type="email" class="form-control" placeholder="you@example.com">
+            </div>
+
+			<div class="mb-3">
+			    <label class="form-label">Phone Number</label>
+			    <input id="phone"
+			           type="tel"
+			           class="form-control"
+			           placeholder="10-digit mobile number"
+			           maxlength="10">
+			</div>
+
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input id="password" type="password" class="form-control" placeholder="••••••••">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Role</label>
+                <select id="role" class="form-select">
+                    <option value="">-- Select Role --</option>
+                    <option value="CUSTOMER">Customer</option>
+                    <option value="PROFESSIONAL">Professional</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary w-100" onclick="register()">Register</button>
+
+            <div class="text-center mt-3">
+                Already have an account?
+                <a href="/login.html">Login</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="card-footer text-center text-muted small">
+            © Glamify Personal Care Services
+        </div>
+    </div>
+</div>
+
+<!-- JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/api.js"></script>
+
+
+<script>
+function register() {
+
+    const fullName = document.getElementById("fullName").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const role = document.getElementById("role").value;
+
+    // Validation
+    if (!fullName || !email || !password || !role) {
+        showToast("All fields are required", "warning");
+        return;
+    }
+
+    if (password.length < 6) {
+        showToast("Password must be at least 6 characters", "warning");
+        return;
+    }
+
+    const phone = document.getElementById("phone").value.trim();
+
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+        showToast("Enter a valid 10-digit mobile number", "warning");
+        return;
+    }
+
+    const payload = {
+        fullName,
+        email,
+        phone,
+        password,
+        role
+    };
+
+    fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(err => {
+                throw new Error(err.error || "Registration failed");
+            });
+        }
+        return res.json();
+    })
+    .then(() => {
+        showToast("Registration successful! Please login.", "success");
+        setTimeout(() => {
+            window.location.href = "/login.html";
+        }, 1200);
+    })
+    .catch(err => {
+        showToast(err.message, "error");
+    });
+}
+</script>
+
+</body>
+</html>

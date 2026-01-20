@@ -27,16 +27,19 @@ public class SecurityConfig {
                 // 🔓 STATIC FRONTEND FILES (THIS FIXES 403)
                 .requestMatchers(
                 		"/",
+                		"/*.html",
                         "/login.html",
                         "/admin.html",
                         "/customer.html",
                         "/professional.html",
                         "/navbar.html",
                         "/api.js",
-                        "/favicon.ico",
+                        //"/images/glamify-logo.png",
                         "/css/**",
                         "/js/**",
-                        "/images/**"
+                        "/images/**",
+                        "/*.css",
+                        "/favicon.ico"
                 ).permitAll()
 
                 // 🔓 AUTH + SWAGGER

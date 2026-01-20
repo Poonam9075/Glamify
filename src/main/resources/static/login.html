@@ -2,51 +2,80 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
     <title>Glamify | Login</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
           rel="stylesheet">
-
-    <style>
-    body {
-        background: linear-gradient(120deg, #e0e0e0, #9e9e9e);
-        min-height: 100vh;
-    }
-
-    .login-card {
-        margin-top: 10%;
-    }
-
-    .card-header {
-        background-color: #424242 !important;
-    }
-
-    .btn-primary {
-        background-color: #616161;
-        border-color: #616161;
-    }
-
-    .btn-primary:hover {
-        background-color: #424242;
-        border-color: #424242;
-    }
-</style>
+          
+	<link rel="stylesheet" href="/styles.css">
+	
+	<style>
+	    body {
+	        background: linear-gradient(120deg, #e0e0e0, #9e9e9e);
+	        min-height: 100vh;
+	    }
+	    
+		    .btn-primary {
+		    background-color: #616161 !important;
+		    border-color: #616161 !important;
+		}
+		
+		.btn-primary:hover,
+		.btn-primary:focus {
+		    background-color: #424242 !important;
+		    border-color: #424242 !important;
+		}	
+	</style>
 
 </head>
 
+<!-- Toast Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1100">
+
+  <div id="appToast"
+       class="toast align-items-center text-white bg-success border-0"
+       role="alert" aria-live="assertive" aria-atomic="true">
+
+    <div class="d-flex">
+      <div class="toast-body d-flex align-items-center">
+        <span id="toastIcon" class="me-2 fs-5">✅</span>
+        <span id="toastMessage">Message</span>
+      </div>
+      <button type="button"
+              class="btn-close btn-close-white me-2 m-auto"
+              data-bs-dismiss="toast"></button>
+    </div>
+
+  </div>
+
+</div>
+
+
 <body>
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-4 login-card">
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="card auth-card">
 
-            <div class="card shadow-lg">
-                <div class="card-header text-center bg-dark text-white">
-                    <h4>Glamify Login</h4>
-                </div>
+<!--                 <div class="card-header text-center bg-dark text-white"> -->
+<!--                     <h4>Glamify Login</h4> -->
+<!--                 </div> -->
+
+				<div class="card-header text-center bg-dark text-white login-card-header">
+				
+				    <img src="/images/glamify-logo.png"
+				         alt="Glamify"
+				         class="login-logo mb-2">
+				
+<!-- 				    <h4 class="mb-0">Login</h4> -->
+				</div>
+
 
                 <div class="card-body">
+                
+                	<h5 class="text-center mb-3">User Login</h5>
 
                     <div class="mb-3">
                         <label class="form-label">Email</label>
@@ -62,24 +91,21 @@
                                placeholder="Enter password">
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Login As</label>
-                        <select id="role" class="form-select">
-                            <option value="ADMIN">Admin</option>
-                            <option value="CUSTOMER">Customer</option>
-                            <option value="PROFESSIONAL">Professional</option>
-                        </select>
-                    </div>
-
                     <button class="btn btn-primary w-100"
                             onclick="login()">
                         Login
                     </button>
+                    
+                    <div class="text-center mt-3">
+					    Don’t have an account?
+					    <a href="/register.html" class="fw-semibold">Register</a>
+					</div>
+					                    
 
                 </div>
 
                 <div class="card-footer text-center text-muted">
-                    © Glamify Beauty Services
+                    © Glamify Personal Care Services
                 </div>
             </div>
 
@@ -90,14 +116,15 @@
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+<script src="api.js"></script>
+
 <!-- Login Script -->
 <script>
 function login() {
 
     const payload = {
         username: document.getElementById("email").value,
-        password: document.getElementById("password").value,
-        role: document.getElementById("role").value
+        password: document.getElementById("password").value
     };
 
     fetch("/api/auth/login", {
@@ -105,25 +132,61 @@ function login() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
     })
-    .then(res => {
-        if (!res.ok) {
-            throw new Error("Invalid credentials");
+    .then(async res => {
+
+        // ✅ SUCCESS
+        if (res.ok) {
+            return res.json();
         }
-        return res.json();
+
+        // ❌ ERROR: read text safely (Spring sends plain text)
+        const message = (await res.text()).toLowerCase();
+
+        // 🔒 Disabled account
+        if (message.includes("disabled")) {
+            throw new Error("DISABLED");
+        }
+
+        // ❌ Invalid credentials
+        if (
+            res.status === 400 ||
+            res.status === 401
+        ) {
+            throw new Error("INVALID");
+        }
+
+        // ❓ Fallback
+        throw new Error("UNKNOWN");
     })
     .then(data => {
         localStorage.setItem("token", data.token);
         localStorage.setItem("role", data.role);
+        localStorage.setItem("fullName", data.fullName);
 
         if (data.role === "ADMIN") window.location.href = "/admin.html";
         if (data.role === "CUSTOMER") window.location.href = "/customer.html";
         if (data.role === "PROFESSIONAL") window.location.href = "/professional.html";
     })
     .catch(err => {
-        alert("Login failed! Please check credentials.");
+
+        if (err.message === "DISABLED") {
+            showToast(
+                "Your account has been disabled. Please contact the administrator.",
+                "warning"
+            );
+            return;
+        }
+
+        if (err.message === "INVALID") {
+            showToast("Invalid email or password.", "error");
+            return;
+        }
+
+        showToast("Login failed. Please try again later.", "error");
     });
 }
 </script>
+
 
 </body>
 </html>
