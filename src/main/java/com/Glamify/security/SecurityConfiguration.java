@@ -91,7 +91,7 @@ public class SecurityConfiguration {
             )
             .authorizeHttpRequests(auth -> auth
 
-                // 🔓 Swagger (MUST be public)
+                //  Swagger (MUST be public)
                 .requestMatchers(
                 	"/auth/**",
                     "/professional/register",
@@ -101,15 +101,15 @@ public class SecurityConfiguration {
                     "/swagger-ui.html"
                 ).permitAll()
 
-                // 🔓 Authentication
+                //  Authentication
                 .requestMatchers("/auth/**").permitAll()
 
-                // 🔐 Role-based access
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                //  Role-based access
+                //.requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/professional/**").hasRole("PROFESSIONAL")
                 .requestMatchers("/customer/**").hasRole("CUSTOMER")
 
-                // 🔐 Everything else needs authentication
+                //  Everything else needs authentication
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

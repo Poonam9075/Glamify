@@ -41,7 +41,7 @@ public class Appointment extends BaseEntity {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "service_id", nullable = false)
-    private Service service;
+    private Services service;
 }
 
 	
