@@ -1,5 +1,9 @@
 package com.Glamify.repository;
 
-public class CustomerRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.Glamify.entities.Customer;
+
+public interface CustomerRepository extends JpaRepository<Customer, Long> {
+    // No extra code needed
 }

@@ -9,7 +9,11 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 @AttributeOverride(name = "id", column = @Column(name = "appointment_id"))
 public class Appointment extends BaseEntity {
