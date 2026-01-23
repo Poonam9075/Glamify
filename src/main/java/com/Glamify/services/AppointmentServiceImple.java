@@ -1,6 +1,7 @@
 package com.Glamify.services;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.Glamify.dto.ApiResponse;
 import com.Glamify.dto.AppointmentCreateDTO;
+import com.Glamify.dto.AppointmentResponseDTO;
 import com.Glamify.entities.Appointment;
 import com.Glamify.entities.AppointmentStatus;
 import com.Glamify.entities.Customer;
@@ -37,10 +39,9 @@ public class AppointmentServiceImple implements AppointmentService {
 
     @Override
     public ApiResponse bookAppointment(AppointmentCreateDTO request) {
-
         // 1️ Get logged-in customer
         Long userId = SecurityUtils.getLoggedInUserId();
-
+        
         Customer customer = customerRepository.findByUserId(userId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Customer not found"));
@@ -85,4 +86,147 @@ public class AppointmentServiceImple implements AppointmentService {
                 "Appointment booked successfully"
         );
     }
+
+    @Override
+    public List<AppointmentResponseDTO> getCustomerAppointments() {
+
+        // 1️ Get logged-in customer
+        Long userId = SecurityUtils.getLoggedInUserId();
+
+        Customer customer = customerRepository.findByUserId(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Customer not found"));
+
+        // 2️ Fetch appointments
+        List<Appointment> appointments =
+                appointmentRepository.findByCustomer(customer);
+
+        // 3️ Map to DTO
+        return appointments.stream()
+                .map(appointment -> {
+                    AppointmentResponseDTO dto = new AppointmentResponseDTO();
+                    dto.setAppointmentId(appointment.getId());
+                    dto.setCustomerName(
+                            appointment.getCustomer().getUser().getFirstName());
+                    dto.setProfessionalName(
+                            appointment.getProfessional().getUser().getFirstName());
+                    dto.setServiceName(
+                            appointment.getService().getServiceName());
+                    dto.setAppointmentDateTime(
+                            appointment.getAppointmentDateTime());
+                    dto.setServiceAddress(
+                            appointment.getServiceAddress());
+                    dto.setStatus(
+                            appointment.getStatus());
+                    return dto;
+                })
+                .toList();
+    }
+
+    
+    @Override
+    public List<AppointmentResponseDTO> getProfessionalAppointments() {
+
+        // 1️ Get logged-in professional
+        Long userId = SecurityUtils.getLoggedInUserId();
+
+        Professional professional = professionalRepository.findByUserId(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Professional not found"));
+
+        // 2️ Fetch appointments
+        List<Appointment> appointments =
+                appointmentRepository.findByProfessional(professional);
+
+        // 3️ Manual mapping (flattened DTO)
+        return appointments.stream()
+                .map(appointment -> {
+                    AppointmentResponseDTO dto = new AppointmentResponseDTO();
+                    dto.setAppointmentId(appointment.getId());
+                    dto.setCustomerName(
+                            appointment.getCustomer().getUser().getFirstName());
+                    dto.setProfessionalName(
+                            professional.getUser().getFirstName());
+                    dto.setServiceName(
+                            appointment.getService().getServiceName());
+                    dto.setAppointmentDateTime(
+                            appointment.getAppointmentDateTime());
+                    dto.setServiceAddress(
+                            appointment.getServiceAddress());
+                    dto.setStatus(
+                            appointment.getStatus());
+                    return dto;
+                })
+                .toList();
+    }
+    
+    @Override
+    public ApiResponse markAppointmentCompleted(Long appointmentId) {
+
+        Long userId = SecurityUtils.getLoggedInUserId();
+
+        Professional professional = professionalRepository.findByUserId(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Professional not found"));
+
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Appointment not found"));
+
+        // ownership check
+        if (!appointment.getProfessional().getId()
+                .equals(professional.getId())) {
+            throw new InvalidOperationException(
+                    "You are not authorized to update this appointment");
+        }
+
+        // status check
+        if (appointment.getStatus() != AppointmentStatus.BOOKED) {
+            throw new InvalidOperationException(
+                    "Only BOOKED appointments can be completed");
+        }
+
+        appointment.setStatus(AppointmentStatus.COMPLETED);
+
+        return new ApiResponse(
+                "SUCCESS",
+                "Appointment marked as completed");
+    }
+    
+    //--------------- Cancel appointment By Customer -------------------------
+    @Override
+    public ApiResponse cancelAppointment(Long appointmentId) {
+
+        // 1️ Get logged-in user id
+        Long userId = SecurityUtils.getLoggedInUserId();
+
+        // 2️ Fetch appointment for THIS customer only
+        Appointment appointment = appointmentRepository
+                .findByIdAndCustomerUserId(appointmentId, userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Appointment not found"));
+
+        // 3️ Validate status
+        if (appointment.getStatus() != AppointmentStatus.BOOKED) {
+            throw new InvalidOperationException(
+                    "Only BOOKED appointments can be cancelled");
+        }
+
+        // 4️ Validate time
+        if (appointment.getAppointmentDateTime().isBefore(LocalDateTime.now())) {
+            throw new InvalidOperationException(
+                    "Cannot cancel past appointments");
+        }
+
+        // 5️ Cancel appointment
+        appointment.setStatus(AppointmentStatus.CANCELLED);
+
+        return new ApiResponse(
+                "SUCCESS",
+                "Appointment cancelled successfully"
+        );
+    }
+
+
+
 }
