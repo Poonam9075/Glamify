@@ -21,7 +21,7 @@ import com.Glamify.exceptions.ResourceNotFoundException;
 import com.Glamify.repository.AppointmentRepository;
 import com.Glamify.repository.CustomerRepository;
 import com.Glamify.repository.ProfessionalRepository;
-import com.Glamify.repository.ServicesRepository;
+import com.Glamify.repository.ServiceRepository;
 import com.Glamify.security.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class AppointmentServiceImple implements AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final CustomerRepository customerRepository;
     private final ProfessionalRepository professionalRepository;
-    private final ServicesRepository serviceRepository;
+    private final ServiceRepository serviceRepository;
     private final ModelMapper modelMapper;
 
     @Override
