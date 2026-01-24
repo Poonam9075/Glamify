@@ -7,29 +7,26 @@ import com.Glamify.dto.ServiceCreateDTO;
 import com.Glamify.entities.ServiceCategory;
 import com.Glamify.entities.Services;
 import com.Glamify.entities.Status;
-import com.Glamify.exceptions.DuplicateResourceException;
 import com.Glamify.exceptions.InvalidOperationException;
 import com.Glamify.exceptions.ResourceNotFoundException;
 import com.Glamify.repository.ServiceCategoryRepository;
 import com.Glamify.repository.ServiceRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
-public class AdminServiceService {
+public class AdminServiceImple implements AdminService {
 
     private final ServiceRepository serviceRepository;
     private final ServiceCategoryRepository categoryRepository;
 
-    public ApiResponse addService(ServiceCreateDTO dto) {
+    @Override
+    public ApiResponse updateService(Long serviceId, ServiceCreateDTO dto) {
 
-        if (serviceRepository.existsByServiceName(dto.getServiceName())) {
-            throw new DuplicateResourceException(
-                    "Service already exists");
-        }
+        Services service = serviceRepository.findById(serviceId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Service not found"));
 
         ServiceCategory category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() ->
@@ -37,10 +34,9 @@ public class AdminServiceService {
 
         if (category.getStatus() != Status.ACTIVE) {
             throw new InvalidOperationException(
-                    "Category is inactive");
+                    "Cannot assign inactive category");
         }
 
-        Services service = new Services();
         service.setServiceName(dto.getServiceName());
         service.setPrice(dto.getPrice());
         service.setEstimatedTime(dto.getEstimatedTime());
@@ -48,9 +44,6 @@ public class AdminServiceService {
 
         serviceRepository.save(service);
 
-        return new ApiResponse("SUCCESS", "Service added successfully");
+        return new ApiResponse("SUCCESS", "Service updated successfully");
     }
-    
-    
-    
 }

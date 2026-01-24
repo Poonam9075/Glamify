@@ -29,4 +29,6 @@ public class AdminController {
                 professionalService.updateProfessionalStatus(id, request)
         );
     }
+    
+    
 }
