@@ -1,5 +1,5 @@
 package com.Glamify.entities;
 
 public enum Gender {
-FEMALE , MALE
+FEMALE , MALE, UNISEX
 }

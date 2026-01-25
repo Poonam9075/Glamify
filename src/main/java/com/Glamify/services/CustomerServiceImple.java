@@ -1,5 +1,7 @@
 package com.Glamify.services;
 
+import java.util.List;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -8,11 +10,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.Glamify.dto.ApiResponse;
 import com.Glamify.dto.CustomerRegDTO;
 import com.Glamify.entities.Customer;
+import com.Glamify.entities.Gender;
+import com.Glamify.entities.Services;
 import com.Glamify.entities.Status;
 import com.Glamify.entities.User;
 import com.Glamify.entities.UserRole;
 import com.Glamify.exceptions.DuplicateResourceException;
 import com.Glamify.repository.CustomerRepository;
+import com.Glamify.repository.ServiceRepository;
 import com.Glamify.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +29,7 @@ public class CustomerServiceImple implements CustomerService {
 
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
+    private final ServiceRepository serviceRepository;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
 
@@ -66,4 +72,25 @@ public class CustomerServiceImple implements CustomerService {
                 "Customer registered successfully"
         );
     }
+    
+    @Override
+    public List<Services> searchServices(String serviceName) {
+    	
+    	return serviceRepository.findByServiceNameContainingIgnoreCase(serviceName);
+	}
+    
+    @Override
+    public List<Services> searchServicesByGender(Gender gender) {
+    	return serviceRepository.findByGender(gender);
+    }
+    
+    @Override
+    public List<Services> filterServicesByPrice(Double minPrice, Double maxPrice) {
+    	return serviceRepository.findByPriceBetween(minPrice, maxPrice);
+    }
+    
+    @Override
+    public List<Services> getAllServices() {
+    	return serviceRepository.findAll();
+	}
 }
