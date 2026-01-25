@@ -10,6 +10,8 @@ import com.Glamify.dto.ProfessionalRegDTO;
 	    
 	    ApiResponse updateProfessionalStatus(Long professionalId,
                 ProfessionalApprovalDTO request);
+	    
+	    //List<ProfessionalDTO> getProfessionalsByService(Long serviceId);
 
 	}
 

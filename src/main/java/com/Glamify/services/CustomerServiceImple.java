@@ -36,37 +36,37 @@ public class CustomerServiceImple implements CustomerService {
     @Override
     public ApiResponse registerCustomer(CustomerRegDTO request) {
 
-        // ✅ 1. Duplicate Email Check
+        //  1. Duplicate Email Check
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateResourceException("Email already registered: " + request.getEmail());
         }
 
-        // ✅ 2. Duplicate Phone Check
+        //  2. Duplicate Phone Check
         if (userRepository.existsByPhone(request.getPhone())) {
             throw new DuplicateResourceException("Phone already registered: " + request.getPhone());
         }
 
-        // ✅ 3. Map DTO → User entity
+        //  3. Map DTO → User entity
         User user = modelMapper.map(request, User.class);
 
-        // ✅ 4. Encrypt password
+        //  4. Encrypt password
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        // ✅ 5. Assign role & status
+        //  5. Assign role & status
         user.setRole(UserRole.ROLE_CUSTOMER);
-        user.setIsActive(Status.ACTIVE);
+        user.setIsActive(Status.INACTIVE);
 
-        // ✅ 6. Save User
+        //  6. Save User
         User savedUser = userRepository.save(user);
 
-        // ✅ 7. Create Customer entity
+        // 7. Create Customer entity
         Customer customer = new Customer();
         customer.setUser(savedUser);
 
-        // ✅ 8. Save Customer
+        //  8. Save Customer
         customerRepository.save(customer);
 
-        // ✅ 9. Return response
+        // 9. Return response
         return new ApiResponse(
                 "SUCCESS",
                 "Customer registered successfully"

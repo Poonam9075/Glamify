@@ -7,9 +7,11 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.Glamify.dto.AdminAppointmentResponseDTO;
 import com.Glamify.dto.ApiResponse;
 import com.Glamify.dto.AppointmentCreateDTO;
 import com.Glamify.dto.AppointmentResponseDTO;
+import com.Glamify.dto.ProfessionalResponseDTO;
 import com.Glamify.entities.Appointment;
 import com.Glamify.entities.AppointmentStatus;
 import com.Glamify.entities.Customer;
@@ -225,6 +227,77 @@ public class AppointmentServiceImple implements AppointmentService {
                 "SUCCESS",
                 "Appointment cancelled successfully"
         );
+    }
+    
+    
+    //------ To show professional to customers while booking appointment -----------
+    public List<ProfessionalResponseDTO> getProfessionalsForService(Long serviceId) {
+
+        Services service = serviceRepository.findById(serviceId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Service not found"));
+
+        List<Professional> professionals =
+                professionalRepository.findApprovedProfessionals(
+                        ProfessionalStatus.APPROVED,
+                        service.getServiceName()   // or category-based
+                );
+
+        return professionals.stream()
+                .map(p -> {
+                    ProfessionalResponseDTO dto = new ProfessionalResponseDTO();
+                    dto.setProfessionalId(p.getId());
+                    dto.setName(p.getUser().getFirstName());
+                    dto.setSpeciality(p.getSpeciality());
+                    dto.setExperienceInYears(p.getExperienceInYears());
+                    return dto;
+                }).toList();
+    }
+
+// --------- Admin Get All Appointments ---------------
+    @Override
+    public List<AdminAppointmentResponseDTO> getAllAppointmentsForAdmin() {
+
+        return appointmentRepository.findAll()
+                .stream()
+                .map(appointment -> {
+                    AdminAppointmentResponseDTO dto =
+                            new AdminAppointmentResponseDTO();
+
+                    dto.setAppointmentId(appointment.getId());
+
+                    dto.setCustomerName(
+                            appointment.getCustomer()
+                                       .getUser()
+                                       .getFirstName()
+                    );
+
+                    dto.setProfessionalName(
+                            appointment.getProfessional()
+                                       .getUser()
+                                       .getFirstName()
+                    );
+
+                    dto.setServiceName(
+                            appointment.getService()
+                                       .getServiceName()
+                    );
+
+                    dto.setAppointmentDateTime(
+                            appointment.getAppointmentDateTime()
+                    );
+
+                    dto.setServiceAddress(
+                            appointment.getServiceAddress()
+                    );
+
+                    dto.setStatus(
+                            appointment.getStatus()
+                    );
+
+                    return dto;
+                })
+                .toList();
     }
 
 

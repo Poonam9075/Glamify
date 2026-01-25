@@ -2,6 +2,7 @@ package com.Glamify.services;
 
 import java.util.List;
 
+import com.Glamify.dto.AdminAppointmentResponseDTO;
 import com.Glamify.dto.ApiResponse;
 import com.Glamify.dto.AppointmentCreateDTO;
 import com.Glamify.dto.AppointmentResponseDTO;
@@ -14,4 +15,5 @@ public interface AppointmentService {
     List<AppointmentResponseDTO> getProfessionalAppointments();
     ApiResponse markAppointmentCompleted(Long appointmentId);
 	ApiResponse cancelAppointment(Long appointmentId);
+	 List<AdminAppointmentResponseDTO> getAllAppointmentsForAdmin();
 }
