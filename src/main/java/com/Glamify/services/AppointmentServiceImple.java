@@ -12,6 +12,7 @@ import com.Glamify.dto.ApiResponse;
 import com.Glamify.dto.AppointmentCreateDTO;
 import com.Glamify.dto.AppointmentResponseDTO;
 import com.Glamify.dto.ProfessionalResponseDTO;
+import com.Glamify.dto.RatingRequestDto;
 import com.Glamify.entities.Appointment;
 import com.Glamify.entities.AppointmentStatus;
 import com.Glamify.entities.Customer;
@@ -298,6 +299,23 @@ public class AppointmentServiceImple implements AppointmentService {
                     return dto;
                 })
                 .toList();
+    }
+    
+    @Override
+    public void addRating(RatingRequestDto dto) {
+
+        Appointment appointment = appointmentRepository
+                .findById(dto.getAppointmentId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Appointment not found"));
+
+        // ✅ THIS CHECK BELONGS HERE
+        if (appointment.getStatus() != AppointmentStatus.COMPLETED) {
+            throw new InvalidOperationException("Service not completed yet");
+        }
+
+        appointment.setRating(dto.getRating());
+        appointmentRepository.save(appointment);
     }
 
 

@@ -22,8 +22,8 @@ public class Appointment extends BaseEntity {
     private LocalDateTime appointmentDateTime;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20, nullable = false)
-    private AppointmentStatus status = AppointmentStatus.BOOKED;
+    @Column(nullable = false)
+    private AppointmentStatus status;
 
     // -------- Address at booking time --------
     @Column(length = 200, nullable = false)
@@ -42,6 +42,32 @@ public class Appointment extends BaseEntity {
     @ManyToOne(optional = false)
     @JoinColumn(name = "service_id", nullable = false)
     private Services service;
+    
+
+
+@Column
+private Integer rating; // 1–5
+
+
+// getter & setter
+public Integer getRating() {
+return rating;
+}
+
+
+public void setRating(Integer rating) {
+this.rating = rating;
+}
+
+	public void setStatus(String string) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setStatus(AppointmentStatus cancelled) {
+		// TODO Auto-generated method stub
+		
+	}
 }
 
 	

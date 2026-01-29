@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.Glamify.dto.ApiResponse;
 import com.Glamify.dto.AppointmentCreateDTO;
 import com.Glamify.dto.AppointmentResponseDTO;
+import com.Glamify.dto.RatingRequestDto;
 import com.Glamify.services.AppointmentService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -70,6 +72,12 @@ public class AppointmentController {
         return ResponseEntity.ok(
                 appointmentService.cancelAppointment(appointmentId)
         );
+    }
+    
+    @PostMapping("/rate")
+    public String rateAppointment(@Valid @RequestBody RatingRequestDto dto) {
+    appointmentService.addRating(dto);
+    return "Rating submitted successfully";
     }
 
 
