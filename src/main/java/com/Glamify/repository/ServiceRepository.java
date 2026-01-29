@@ -21,4 +21,6 @@ public interface ServiceRepository
 	
 	// Filter services by price range
 	List<Services> findByPriceBetween(Double minPrice, Double maxPrice);
+	
+	List<Services> findAll();
 }
