@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.Glamify.dto.ApiResponse;
 import com.Glamify.dto.ServiceCategoryCreateDTO;
-import com.Glamify.services.ServiceCategoryService;
+import com.Glamify.services.ServiceCategoryServiceImple;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AdminCategoryController {
 
-    private final ServiceCategoryService categoryService;
+    private final ServiceCategoryServiceImple categoryService;
 
     @PostMapping
     public ResponseEntity<ApiResponse> addCategory(
