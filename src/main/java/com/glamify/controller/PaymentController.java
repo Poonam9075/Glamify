@@ -1,16 +1,16 @@
 package com.glamify.controller;
 
 import com.glamify.entity.Payment;
-import com.glamify.service.AppointmentService;
+import com.glamify.service.AppointmentServiceImpl;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/payment")
 public class PaymentController {
 
-    private final AppointmentService appointmentService;
+    private final AppointmentServiceImpl appointmentService;
 
-    public PaymentController(AppointmentService appointmentService) {
+    public PaymentController(AppointmentServiceImpl appointmentService) {
         this.appointmentService = appointmentService;
     }
 
@@ -19,4 +19,5 @@ public class PaymentController {
                                @RequestParam String method) {
         return appointmentService.makePayment(invoiceId, method);
     }
+        
 }

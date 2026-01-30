@@ -1,101 +1,69 @@
 package com.glamify.controller;
 
-import com.glamify.dto.CustomerBookingRequest;
-import com.glamify.entity.*;
-import com.glamify.repository.AppointmentRepository;
-import com.glamify.repository.BeautyServiceRepository;
-import com.glamify.repository.UserRepository;
-import com.glamify.service.AppointmentService;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import com.glamify.dto.AppointmentResponse;
+import com.glamify.dto.CustomerBookingRequest;
+import com.glamify.entity.Appointment;
+import com.glamify.entity.BeautyService;
+import com.glamify.repository.AppointmentRepository;
+import com.glamify.service.AppointmentService;
+import com.glamify.service.BeautyServicesService;
+import com.glamify.service.CustomerService;
 
 @RestController
 @RequestMapping("/api/customer")
 public class CustomerController {
 
+	private final CustomerService customerService;
     private final AppointmentService appointmentService;
-    private final AppointmentRepository appointmentRepo;
-    private final UserRepository userRepo;
-    private final BeautyServiceRepository beautyServiceRepository;
+    private final BeautyServicesService beautyServicesService;
 
-    // ✅ SINGLE CONSTRUCTOR (CORRECT)
-    public CustomerController(AppointmentService appointmentService,
+    public CustomerController(CustomerService customerService,
+    						  AppointmentService appointmentService,
                               AppointmentRepository appointmentRepo,
-                              BeautyServiceRepository beautyServiceRepository,
-                              UserRepository userRepo) {
+                              BeautyServicesService beautyServicesService
+                              ) {
         this.appointmentService = appointmentService;
-        this.appointmentRepo = appointmentRepo;
-        this.userRepo = userRepo;
-        this.beautyServiceRepository = beautyServiceRepository;
+        this.beautyServicesService = beautyServicesService;
+        this.customerService = customerService;
     }
 
-    // =================================================
-    // 1️⃣ GET ALL SERVICES (FROM DATABASE)
-    // =================================================
+    // Get active available services
     @GetMapping("/services")
-    public List<BeautyService> getAllServices() {
-        return beautyServiceRepository.findByActiveTrue();
+    public List<BeautyService> getActiveServices() {
+    	
+        return beautyServicesService.getActiveServices();
     }
 
-    // =================================================
-    // 2️⃣ CREATE APPOINTMENT (CUSTOMER FROM JWT)
-    // =================================================
+    // Create appointment for customer
     @PostMapping("/appointment")
-    public Appointment bookAppointment(
+    public AppointmentResponse bookAppointment(
             @RequestBody CustomerBookingRequest request) {
-
+    	
         return appointmentService.createAppointmentForCustomer(request);
     }
 
-    // =================================================
-    // 3️⃣ VIEW MY APPOINTMENTS (JWT BASED)
-    // =================================================
+    // Get customer appointments
     @GetMapping("/appointments")
     public List<Appointment> getMyAppointments() {
 
-        String email = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-        
-        User user = userRepo.findByEmail(email)
-                .orElseThrow();
-
-        return appointmentRepo.findByCustomerUserId(user.getUserId());
+        return customerService.getMyAppointments();
 
     }
 
-    // =================================================
-    // 4️⃣ CANCEL APPOINTMENT
-    // CREATED / ACCEPTED → CANCELLED
-    // =================================================
+    // Cancel appointment
     @PutMapping("/appointment/{appointmentId}/cancel")
     public Appointment cancelAppointment(
             @PathVariable Long appointmentId) {
 
         return appointmentService.cancelAppointment(appointmentId);
     }
-
-    // =================================================
-    // 5️⃣ VIEW SINGLE APPOINTMENT DETAILS
-    // =================================================
-    @GetMapping("/appointment/{appointmentId}")
-    public Appointment getAppointmentDetails(
-            @PathVariable Long appointmentId) {
-
-        return appointmentRepo.findById(appointmentId)
-                .orElseThrow(() ->
-                        new RuntimeException("Appointment not found"));
-    }
-
-    // =================================================
-    // 6️⃣ PAY FOR APPOINTMENT
-    // =================================================
-    @PostMapping("/payment/{invoiceId}")
-    public Payment makePayment(
-            @PathVariable Long invoiceId,
-            @RequestParam String method) {
-
-        return appointmentService.makePayment(invoiceId, method);
-    }
+    
 }

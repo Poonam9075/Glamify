@@ -12,10 +12,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtFilter jwtFilter;
+//    private final JwtFilter jwtFilter;
 
     public SecurityConfig(JwtFilter jwtFilter) {
-        this.jwtFilter = jwtFilter;
+//        this.jwtFilter = jwtFilter;
         System.out.println(">>> SecurityConfig LOADED <<<");
     }
 
@@ -61,15 +61,12 @@ public class SecurityConfig {
                     "/swagger-ui.html"
                 ).permitAll()
 
-                // PREFLIGHT
-                //.requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-
-                // 🔐 ROLE-BASED APIs
+                // ROLE-BASED APIs
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
                 .requestMatchers("/api/professional/**").hasRole("PROFESSIONAL")
 
-                // 🔐 EVERYTHING ELSE
+                // EVERYTHING ELSE
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

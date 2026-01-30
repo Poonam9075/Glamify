@@ -1,170 +1,133 @@
 package com.glamify.controller;
 
-import com.glamify.entity.BeautyService;
+import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import com.glamify.dto.PendingProfessionalResponse;
 import com.glamify.entity.Appointment;
+import com.glamify.entity.BeautyService;
 import com.glamify.entity.Customer;
 import com.glamify.entity.Professional;
 import com.glamify.entity.User;
-import com.glamify.repository.*;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import com.glamify.service.AdminService;
+import com.glamify.service.AppointmentService;
+import com.glamify.service.BeautyServicesService;
+import com.glamify.service.CustomerService;
+import com.glamify.service.ProfessionalService;
 
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
 
-	private final UserRepository userRepo;
-    private final CustomerRepository customerRepo;
-    private final ProfessionalRepository professionalRepo;
-    private final AppointmentRepository appointmentRepo;
-    private final BeautyServiceRepository beautyServiceRepo;
-
-    //@Autowired
-    //private PasswordEncoder passwordEncoder;
-
-    public AdminController(UserRepository userRepo,
-    					   CustomerRepository customerRepo,
-                           ProfessionalRepository professionalRepo,
-                           AppointmentRepository appointmentRepo,
-                           BeautyServiceRepository beautyServiceRepo) {
-    	this.userRepo = userRepo;
-        this.customerRepo = customerRepo;
-        this.professionalRepo = professionalRepo;
-        this.appointmentRepo = appointmentRepo;
-        this.beautyServiceRepo = beautyServiceRepo;
+	private final AdminService adminService;
+	private final CustomerService customerService;
+	private final ProfessionalService professionalService;
+	private final AppointmentService appointmentService;
+	private final BeautyServicesService beautyServicesService;
+	
+    public AdminController(AdminService adminService,
+    					   CustomerService customerService,
+    					   ProfessionalService professionalService,
+    					   AppointmentService appointmentService,
+    					   BeautyServicesService beautyServicesService) {
+        
+        this.adminService = adminService;
+        this.customerService = customerService;
+        this.professionalService = professionalService;
+        this.appointmentService = appointmentService;
+        this.beautyServicesService = beautyServicesService;
     }
 
+    
     // ================= USERS =================
 
     @GetMapping("/users")
     public List<User> getAllUsers() {
-        return userRepo.findAll();
+        return adminService.getAllUsers();
     }
 
     @PutMapping("/user/{id}")
     public ResponseEntity<?> updateUser(
-            @PathVariable Long id,
-            @RequestBody User updatedUser) {
-
-        User existingUser = userRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // 🔒 Prevent admin from disabling himself (optional but recommended)
-        String currentEmail = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
-
-        if (existingUser.getEmail().equals(currentEmail)
-                && !updatedUser.isActive()) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("Admin cannot disable own account");
-        }
-
-        // ✅ Update editable fields
-        existingUser.setFullName(updatedUser.getFullName());
-        existingUser.setEmail(updatedUser.getEmail());
-        existingUser.setUserRole(updatedUser.getUserRole());
-        existingUser.setActive(updatedUser.isActive());
-
-        // 🔑 Update password ONLY if provided
-        if (updatedUser.getPassword() != null
-                && !updatedUser.getPassword().isBlank()) {
-            existingUser.setPassword(updatedUser.getPassword());
-        }
-
-        userRepo.save(existingUser);
-
-        return ResponseEntity.ok(existingUser);
-    }
-
-    
+          @PathVariable Long id,
+          @RequestBody User updatedUser) {
+    	
+    	return ResponseEntity.ok(adminService.updateUser(id, updatedUser));
+	}
+        
     @PutMapping("/user/{id}/toggle")
     public ResponseEntity<?> toggleUser(@PathVariable Long id) {
-
-        User user = userRepo.findById(id)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (user.getEmail().equals(SecurityContextHolder
-                .getContext().getAuthentication().getName())) {
-            throw new RuntimeException("Admin cannot disable own account");
-        }
-        
-        user.setActive(!user.isActive());
-        userRepo.save(user);
-
-        return ResponseEntity.ok(user);
+    	
+    	return ResponseEntity.ok(adminService.toggleUser(id));
+    }    
+    
+    
+    // ================= PROFESSIONAL =================
+    
+    @GetMapping("/professionals/pending")
+    public List<PendingProfessionalResponse> getPendingProfessionals() {
+    	return adminService.getPendingProfessionals();
     }
+    
+    @PutMapping("/professionals/{id}/approve")
+    public ResponseEntity<String> approveProfessional(@PathVariable Long id) {
+	    adminService.approveProfessional(id);
+	    return ResponseEntity.ok("Professional approved successfully");
+    }
+    
+    @GetMapping("/professionals")
+    public List<Professional> getProfessionals() {
+        return professionalService.getAllProfessionals();
+    }
+    
 
+    // ================= CUSTOMER =================        
     
     @GetMapping("/customers")
     public List<Customer> getCustomers() {
-        return customerRepo.findAll();
+        return customerService.getAllCustomers();        
     }
-
-    @GetMapping("/professionals")
-    public List<Professional> getProfessionals() {
-        return professionalRepo.findAll();
-    }
+    
 
     // ================= APPOINTMENTS =================
 
     @GetMapping("/appointments")
     public List<Appointment> getAppointments() {
-        return appointmentRepo.findAll();
+        return appointmentService.getAllAppointments();
     }
 
+    
     // ================= BEAUTY SERVICES =================
 
-    // ================= GET ALL =================
+    // Get all beauty services
     @GetMapping("/beauty-services")
     public List<BeautyService> getAllServices() {
-        return beautyServiceRepo.findAll();
+        return beautyServicesService.getAllServices();
     }
 
-    // ================= ADD =================
+    // Add new beauty service
     @PostMapping("/beauty-service")
     public BeautyService addService(@RequestBody BeautyService service) {
-        return beautyServiceRepo.save(service);
+        return beautyServicesService.addService(service);
     }
 
-    // ================= UPDATE =================
+    // Update beauty service
     @PutMapping("/beauty-service/{id}")
     public ResponseEntity<?> updateService(
-            @PathVariable Long id,
-            @RequestBody BeautyService updated) {
-
-        BeautyService existing = beautyServiceRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Service not found"));
-
-        existing.setName(updated.getName());
-        existing.setCategory(updated.getCategory());
-        existing.setPrice(updated.getPrice());
-        existing.setDiscount(updated.getDiscount());
-        existing.setDuration(updated.getDuration()); // ✅ IMPORTANT
-
-        beautyServiceRepo.save(existing);
-        return ResponseEntity.ok(existing);
+	          @PathVariable Long id,
+	          @RequestBody BeautyService updated) {
+    	return ResponseEntity.ok(beautyServicesService.updateService(id, updated));
     }
-
-    // ================= DELETE =================
+    
+    // Enable/Disable beauty service
     @PutMapping("/beauty-service/{id}/toggle")
     public ResponseEntity<?> toggleService(@PathVariable Long id) {
-
-        BeautyService service = beautyServiceRepo.findById(id)
-            .orElseThrow(() -> new RuntimeException("Service not found"));
-
-        service.setActive(!service.isActive()); // 🔥 toggle
-        beautyServiceRepo.save(service);
-
-        return ResponseEntity.ok(service);
+    	return ResponseEntity.ok(beautyServicesService.toggleService(id));
     }
 
 }

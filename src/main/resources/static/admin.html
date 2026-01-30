@@ -82,6 +82,16 @@
 				<button class="nav-link" data-bs-toggle="tab"
 					data-bs-target="#usersTab" type="button">Users</button>
 			</li>
+			
+			<li class="nav-item">
+			    <button class="nav-link"
+			            data-bs-toggle="tab"
+			            data-bs-target="#pendingProfessionalsTab"
+			            type="button">
+			        <i class="bi bi-person-check me-1"></i>
+			        Pending Professionals
+			    </button>
+			</li>
 		</ul>
 
 		<div class="tab-content">
@@ -243,6 +253,37 @@
 				</div>
 
 			</div>
+			
+			<div class="tab-pane fade" id="pendingProfessionalsTab">
+
+		    <div class="card shadow mb-4">
+			        <div class="card-body">
+			
+			            <div class="table-responsive">
+			                <table class="table table-bordered table-hover mb-0">
+			                    <thead>
+			                        <tr>
+			                            <th>ID</th>
+			                            <th class="sortable">Name</th>
+			                            <th class="sortable">Email</th>
+			                            <th>Phone</th>
+			                            <th class="sortable">Gender</th>
+			                            <th class="sortable">Speciality</th>
+			                            <th class="sortable">Experience</th>
+			                            <th>Status</th>
+			                            <th>Action</th>
+			                        </tr>
+			                    </thead>
+			
+			                    <tbody id="pendingProfessionalsTable"></tbody>
+			                </table>
+			            </div>
+			
+			        </div>
+			    </div>
+			
+			</div>
+			
 		</div>
 	</div>
 
@@ -496,7 +537,7 @@ function setupAdminLiveValidation() {
 function initAdminPage() {
     loadNavbar();
     loadServices();
-    //loadUsers();
+    loadPendingProfessionals();
     setupAdminLiveValidation();
 }
 
@@ -640,6 +681,79 @@ function checkUserFormValidity() {
     const role = userRole.value;
 
     addUserBtn.disabled = !(name && email && role);
+}
+
+function loadPendingProfessionals() {
+
+    fetch("/api/admin/professionals/pending", {
+        headers: authHeaders()
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        const table = document.getElementById("pendingProfessionalsTable");
+        table.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            table.innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center text-muted">
+                        No pending professionals
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        data.forEach(p => {
+
+            const statusBadge = `
+                <span class="badge bg-warning">PENDING</span>
+            `;
+
+            table.innerHTML += `
+                <tr>
+                    <td>${p.userId}</td>
+                    <td>${p.fullName}</td>
+                    <td>${p.email}</td>
+                    <td>${p.phone}</td>
+                    <td>${p.gender}</td>
+                    <td>${p.speciality}</td>
+                    <td>${p.experienceInYears} yrs</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="btn btn-sm btn-success"
+                                onclick="approveProfessional(${p.userId})">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Approve
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        makeTableSortable(
+            document.querySelector("#pendingProfessionalsTable").closest("table")
+        );
+    });
+}
+
+function approveProfessional(id) {
+
+    showConfirm("Approve this professional?", () => {
+
+        fetch(`/api/admin/professionals/${id}/approve`, {
+            method: "PUT",
+            headers: authHeaders()
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Approve failed");
+            showToast("Professional approved successfully");
+            loadPendingProfessionals();
+        })
+        .catch(() => {
+            showToast("Failed to approve professional", "error");
+        });
+    });
 }
 
 ["userFullName","userEmail","userRole"].forEach(id => {

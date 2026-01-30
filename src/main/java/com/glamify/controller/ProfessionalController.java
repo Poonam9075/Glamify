@@ -1,86 +1,55 @@
 package com.glamify.controller;
 
+import java.util.List;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import com.glamify.entity.Appointment;
 import com.glamify.entity.AppointmentStatus;
-import com.glamify.entity.User;
-import com.glamify.repository.AppointmentRepository;
-import com.glamify.repository.UserRepository;
 import com.glamify.service.AppointmentService;
-
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/professional")
 public class ProfessionalController {
 
-    private final AppointmentRepository appointmentRepo;
-    private final UserRepository userRepo;
     private final AppointmentService appointmentService;
 
-    public ProfessionalController(AppointmentRepository appointmentRepo,
-    							  UserRepository userRepo,
-                                  AppointmentService appointmentService) {
-        this.appointmentRepo = appointmentRepo;
-		this.userRepo = userRepo;
+    public ProfessionalController(AppointmentService appointmentService) {
         this.appointmentService = appointmentService;
     }
-
-    // =================================================
-    // 1️⃣ VIEW MY ASSIGNED APPOINTMENTS
-    // =================================================
-//    @GetMapping("/my-appointments")
-//    public List<Appointment> getMyAppointments() {
-//        String email = SecurityContextHolder.getContext()
-//                .getAuthentication().getName();
-//
-//        return appointmentRepo.findByProfessional_User_Email(email);
-//    }
     
-    @GetMapping("/my-appointments")
-    public List<Appointment> getMyAppointments(Authentication authentication) {
+    // Get professional assigned appointments
+    @GetMapping("/appointments")
+    public List<Appointment> getProfessionalAppointments(Authentication authentication) {
 
-        String email = authentication.getName();
-
-        User user = userRepo.findByEmail(email)
-                .orElseThrow();
-
-        return appointmentRepo.findByProfessionalUserId(user.getUserId());
+    	return appointmentService.getAppointmentsByProfessional();
     }
-
     
+    // Get available appointments
     @GetMapping("/available-appointments")
     public List<Appointment> getAvailableAppointments() {
-        return appointmentRepo.findByProfessionalIsNullAndStatus(
-                AppointmentStatus.CREATED
-        );
+        return appointmentService.getUnacceptedAppointments();
     }
     
-    // =================================================
-    // 2️⃣ ACCEPT APPOINTMENT
-    // =================================================
+    // Accept appointment
     @PutMapping("/appointment/{id}/accept")
     public Appointment acceptAppointment(@PathVariable Long id) {
         return appointmentService.acceptAppointmentByProfessional(id);
     }
 
-    // =================================================
-    // 3️⃣ START APPOINTMENT
-    // =================================================
+    // Start appointment
     @PutMapping("/appointment/{id}/start")
     public Appointment start(@PathVariable Long id) {
-        return appointmentService.startAppointment(id);
+        return appointmentService.updateStatus(id, AppointmentStatus.IN_PROGRESS);
     }
 
-    // =================================================
-    // 4️⃣ COMPLETE APPOINTMENT
-    // =================================================
+    // Complete appointment
     @PutMapping("/appointment/{id}/complete")
     public Appointment complete(@PathVariable Long id) {
-        return appointmentService.completeAppointment(id);
+        return appointmentService.updateStatus(id, AppointmentStatus.COMPLETED);
     }
 }
 

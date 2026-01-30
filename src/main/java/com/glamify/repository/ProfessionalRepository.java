@@ -1,12 +1,21 @@
 package com.glamify.repository;
 
-import com.glamify.entity.Professional;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
+import com.glamify.entity.Professional;
 
 public interface ProfessionalRepository
         extends JpaRepository<Professional, Long> {
 
     Optional<Professional> findByEmail(String email);
+    
+    List<Professional> findBySpeciality(String speciality);
+    
+    List<Professional> findByApprovedFalse();
+    
+    List<Professional> findByApprovedTrue();
+    
 }

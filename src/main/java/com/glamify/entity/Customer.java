@@ -1,12 +1,14 @@
 package com.glamify.entity;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
 @Entity
-@PrimaryKeyJoinColumn(name = "id")
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true)
 public class Customer extends User {
-    private String gender;
+	
 }

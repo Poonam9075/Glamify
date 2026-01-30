@@ -96,6 +96,16 @@
                 <input id="password" type="password" class="form-control" placeholder="••••••••">
             </div>
 
+			<div class="mb-3">
+			    <label class="form-label">Gender</label>
+			    <select id="gender" class="form-select">
+			        <option value="">-- Select Gender --</option>
+			        <option value="MALE">Male</option>
+			        <option value="FEMALE">Female</option>
+			        <option value="OTHER">Other</option>
+			    </select>
+			</div>
+
             <div class="mb-3">
                 <label class="form-label">Role</label>
                 <select id="role" class="form-select">
@@ -104,6 +114,15 @@
                     <option value="PROFESSIONAL">Professional</option>
                 </select>
             </div>
+            
+            <div class="mb-3 d-none" id="specialityGroup">
+			    <label class="form-label">Speciality</label>
+			    <input id="speciality"
+			           type="text"
+			           class="form-control"
+			           placeholder="e.g. Hair Stylist, Makeup Artist">
+			</div>
+			            
 
             <button class="btn btn-primary w-100" onclick="register()">Register</button>
 
@@ -132,6 +151,8 @@ function register() {
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
     const role = document.getElementById("role").value;
+    const gender = document.getElementById("gender").value;
+    const speciality = document.getElementById("speciality")?.value?.trim();
 
     // Validation
     if (!fullName || !email || !password || !role) {
@@ -151,13 +172,28 @@ function register() {
         return;
     }
 
+    if (!gender) {
+        showToast("Please select gender", "warning");
+        return;
+    }
+
+    if (role === "PROFESSIONAL" && !speciality) {
+        showToast("Please enter your speciality", "warning");
+        return;
+    }
+    
     const payload = {
-        fullName,
-        email,
-        phone,
-        password,
-        role
-    };
+    	    fullName,
+    	    email,
+    	    phone,
+    	    password,
+    	    gender,
+    	    role
+    	};
+    
+    if (role === "PROFESSIONAL") {
+        payload.speciality = speciality;
+    }
 
     const url =
         role === "PROFESSIONAL"
@@ -189,6 +225,17 @@ function register() {
         showToast(err.message, "error");
     });
 }
+
+document.getElementById("role").addEventListener("change", function () {
+    const specialityGroup = document.getElementById("specialityGroup");
+
+    if (this.value === "PROFESSIONAL") {
+        specialityGroup.classList.remove("d-none");
+    } else {
+        specialityGroup.classList.add("d-none");
+    }
+});
+
 </script>
 
 </body>

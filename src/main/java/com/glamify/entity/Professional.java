@@ -1,16 +1,26 @@
 package com.glamify.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
 @Entity
-@PrimaryKeyJoinColumn(name = "id")
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true)
 public class Professional extends User {
 
+    @Column(nullable = false, length = 100)
     private String speciality;
-    private String gender;
+
+    @Column(nullable = false)
     private int experienceInYears;
+
+    @Column(nullable = false)
     private double rating;
+    
+    @Column(nullable = false)
+    private boolean approved = false;
 }

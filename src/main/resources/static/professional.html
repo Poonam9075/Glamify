@@ -247,7 +247,7 @@ function loadAvailableAppointments() {
 
 // ================= ASSIGNED APPOINTMENTS =================
 function loadAssignedAppointments() {
-    fetch("/api/professional/my-appointments", {
+    fetch("/api/professional/appointments", {
         headers: authHeaders()
     })
     .then(res => res.json())

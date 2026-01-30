@@ -1,30 +1,38 @@
 package com.glamify.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
 @Entity
+@Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
+@Getter
+@Setter
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
-    private String fullName;
+    @Column(nullable = false)
+    protected String fullName;
 
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false, unique = true)
-    private String phone;
-    
+    @Column(nullable = false)
     private String password;
+    
+    @Column(length = 10)
+    protected String phone;
+    
+    @Enumerated(EnumType.STRING)
+    protected Gender gender;
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role userRole; // ADMIN, CUSTOMER, PROFESSIONAL
+    private Role role;
     
-    private boolean active = true;
+    private boolean active;
 }

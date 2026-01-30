@@ -133,31 +133,19 @@ function login() {
         body: JSON.stringify(payload)
     })
     .then(async res => {
-
-        // ✅ SUCCESS
-        if (res.ok) {
-            return res.json();
-        }
-
-        // ❌ ERROR: read text safely (Spring sends plain text)
-        const message = (await res.text()).toLowerCase();
-
-        // 🔒 Disabled account
-        if (message.includes("disabled")) {
-            throw new Error("DISABLED");
-        }
-
-        // ❌ Invalid credentials
-        if (
-            res.status === 400 ||
-            res.status === 401
-        ) {
-            throw new Error("INVALID");
-        }
-
-        // ❓ Fallback
-        throw new Error("UNKNOWN");
-    })
+		
+		const data = await res.json().catch(() => ({}));
+		
+		console.log("🔐 Login response status:", res.status);
+		console.log("🔐 Login response body:", data);
+		
+		if (!res.ok) {
+		// 🔥 THIS is the key fix
+			throw new Error(data.error || "LOGIN_FAILED");
+		}
+		
+		return data;
+	})
     .then(data => {
         localStorage.setItem("token", data.token);
         localStorage.setItem("role", data.role);
@@ -169,7 +157,20 @@ function login() {
     })
     .catch(err => {
 
-        if (err.message === "DISABLED") {
+        let backendMessage = err.message;
+
+        /* if (err.response && err.response.data && err.response.data.error) {
+            backendMessage = err.response.data.error;
+        } */
+
+        console.error("❌ Login error:", err.message);
+        
+        /* console.log("err.response: ", err.response);
+        console.log("err.response.data: ", err.response.data);
+        console.log("err.response.data.error: ", err.response.data.error);
+        console.log("backendMessage: ", backendMessage); */
+        
+        if (backendMessage === "User account is inactive") {
             showToast(
                 "Your account has been disabled. Please contact the administrator.",
                 "warning"
@@ -177,13 +178,23 @@ function login() {
             return;
         }
 
-        if (err.message === "INVALID") {
+        if (backendMessage === "Invalid email or password") {
             showToast("Invalid email or password.", "error");
             return;
         }
+        
+        if (backendMessage === "Professional account is pending admin approval") {
+            showToast("Professional account is pending admin approval", "warning");
+            return;
+        }
+        
 
-        showToast("Login failed. Please try again later.", "error");
+        showToast(
+            backendMessage || "Login failed. Please try again later.",
+            "error"
+        );
     });
+
 }
 </script>
 
