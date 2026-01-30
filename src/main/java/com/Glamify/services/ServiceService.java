@@ -2,14 +2,14 @@ package com.Glamify.services;
 
 import java.util.List;
 
-import com.Glamify.dto.ServiceResponseDto;
+import com.Glamify.dto.ServiceResponseDTO;
 
 public interface ServiceService {
 	
 	
 
-	    List<ServiceResponseDto> getAllServicesForCustomer();
 	    
+	    List<ServiceResponseDTO> getAllServices();
 	    
 	
 }

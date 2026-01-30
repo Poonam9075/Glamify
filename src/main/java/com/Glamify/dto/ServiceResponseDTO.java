@@ -1,19 +1,20 @@
-
 package com.Glamify.dto;
 
 import java.sql.Time;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
-public class ServiceCreateDTO {
+public class ServiceResponseDTO {
 
+    private Long id;
     private String serviceName;
     private int price;
     private Time estimatedTime;
-    private Long categoryId;   // FK
+
+    // category info (flattened for frontend)
+    private Long categoryId;
+    private String categoryName;
 }

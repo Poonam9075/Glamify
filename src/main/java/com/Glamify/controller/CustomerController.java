@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.Glamify.dto.ApiResponse;
 import com.Glamify.dto.CustomerRegDTO;
-import com.Glamify.dto.ServiceResponseDto;
+import com.Glamify.dto.ServiceResponseDTO;
 import com.Glamify.entities.Gender;
 import com.Glamify.entities.Services;
 import com.Glamify.services.CustomerService;
@@ -28,6 +28,7 @@ public class CustomerController {
 
     private final CustomerService customerService;
     private final ServiceService serviceService;
+    
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse> registerCustomer(
@@ -60,8 +61,15 @@ public class CustomerController {
                 customerService.filterServicesByPrice(minPrice, maxPrice));
     }
 
+    
+    
+    
+
     @GetMapping("/services")
-    public List<ServiceResponseDto> getServices() {
-        return serviceService.getAllServicesForCustomer();
+    public ResponseEntity<List<ServiceResponseDTO>> getAllServices() {
+
+        return ResponseEntity.ok(
+                serviceService.getAllServices()
+        );
     }
 }
