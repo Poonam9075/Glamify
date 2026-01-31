@@ -1,16 +1,16 @@
 package com.glamify.service;
 
 import com.glamify.dto.CustomerRegisterRequest;
-import com.glamify.dto.LoginRequest;
-import com.glamify.dto.LoginResponse;
+import com.glamify.dto.UserLoginRequest;
+import com.glamify.dto.UserLoginResponse;
 import com.glamify.dto.ProfessionalRegisterRequest;
-import com.glamify.dto.RegisterResponse;
+import com.glamify.dto.UserRegisterResponse;
 
 public interface AuthService {
 
-    RegisterResponse registerCustomer(CustomerRegisterRequest request);
+    UserRegisterResponse registerCustomer(CustomerRegisterRequest request);
 
-    RegisterResponse registerProfessional(ProfessionalRegisterRequest request);
+    UserRegisterResponse registerProfessional(ProfessionalRegisterRequest request);
     
-    LoginResponse login(LoginRequest request);
+    UserLoginResponse login(UserLoginRequest request);
 }

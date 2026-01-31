@@ -9,12 +9,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.glamify.dto.AppointmentDto;
+import com.glamify.dto.BeautyServiceDto;
+import com.glamify.dto.CustomerDto;
 import com.glamify.dto.PendingProfessionalResponse;
-import com.glamify.entity.Appointment;
-import com.glamify.entity.BeautyService;
-import com.glamify.entity.Customer;
-import com.glamify.entity.Professional;
-import com.glamify.entity.User;
+import com.glamify.dto.ProfessionalDto;
+import com.glamify.dto.UserDto;
 import com.glamify.service.AdminService;
 import com.glamify.service.AppointmentService;
 import com.glamify.service.BeautyServicesService;
@@ -48,14 +48,14 @@ public class AdminController {
     // ================= USERS =================
 
     @GetMapping("/users")
-    public List<User> getAllUsers() {
+    public List<UserDto> getAllUsers() {
         return adminService.getAllUsers();
     }
 
     @PutMapping("/user/{id}")
     public ResponseEntity<?> updateUser(
           @PathVariable Long id,
-          @RequestBody User updatedUser) {
+          @RequestBody UserDto updatedUser) {
     	
     	return ResponseEntity.ok(adminService.updateUser(id, updatedUser));
 	}
@@ -81,7 +81,7 @@ public class AdminController {
     }
     
     @GetMapping("/professionals")
-    public List<Professional> getProfessionals() {
+    public List<ProfessionalDto> getProfessionals() {
         return professionalService.getAllProfessionals();
     }
     
@@ -89,7 +89,7 @@ public class AdminController {
     // ================= CUSTOMER =================        
     
     @GetMapping("/customers")
-    public List<Customer> getCustomers() {
+    public List<CustomerDto> getCustomers() {
         return customerService.getAllCustomers();        
     }
     
@@ -97,7 +97,7 @@ public class AdminController {
     // ================= APPOINTMENTS =================
 
     @GetMapping("/appointments")
-    public List<Appointment> getAppointments() {
+    public List<AppointmentDto> getAppointments() {
         return appointmentService.getAllAppointments();
     }
 
@@ -106,27 +106,27 @@ public class AdminController {
 
     // Get all beauty services
     @GetMapping("/beauty-services")
-    public List<BeautyService> getAllServices() {
+    public List<BeautyServiceDto> getAllServices() {
         return beautyServicesService.getAllServices();
     }
 
     // Add new beauty service
     @PostMapping("/beauty-service")
-    public BeautyService addService(@RequestBody BeautyService service) {
-        return beautyServicesService.addService(service);
+    public BeautyServiceDto addService(@RequestBody BeautyServiceDto beautyServiceDto) {
+        return beautyServicesService.addService(beautyServiceDto);
     }
 
     // Update beauty service
     @PutMapping("/beauty-service/{id}")
-    public ResponseEntity<?> updateService(
+    public ResponseEntity<BeautyServiceDto> updateService(
 	          @PathVariable Long id,
-	          @RequestBody BeautyService updated) {
+	          @RequestBody BeautyServiceDto updated) {
     	return ResponseEntity.ok(beautyServicesService.updateService(id, updated));
     }
     
     // Enable/Disable beauty service
     @PutMapping("/beauty-service/{id}/toggle")
-    public ResponseEntity<?> toggleService(@PathVariable Long id) {
+    public ResponseEntity<BeautyServiceDto> toggleService(@PathVariable Long id) {
     	return ResponseEntity.ok(beautyServicesService.toggleService(id));
     }
 

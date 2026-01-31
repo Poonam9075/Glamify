@@ -6,13 +6,17 @@ import com.glamify.entity.AppointmentStatus;
 import lombok.Data;
 
 @Data
-public class AppointmentResponse {
+public class AppointmentViewDto {
 
     private Long appointmentId;
     private LocalDateTime dateTime;
     private String location;
-    private AppointmentStatus  status;
-    private Long customerId;
-    private Long professionalId;
-    private List<Long> bookedServices;
+    private AppointmentStatus status;
+
+    private String customerName;
+    private String professionalName;
+
+    private List<BeautyServiceViewDto> services;
+
+    private int totalEstimatedTime;
 }

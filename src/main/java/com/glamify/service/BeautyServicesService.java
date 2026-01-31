@@ -1,18 +1,18 @@
 package com.glamify.service;
 
 import java.util.List;
-import com.glamify.entity.BeautyService;
+import com.glamify.dto.BeautyServiceDto;
 
 public interface BeautyServicesService {
 
-	List<BeautyService> getActiveServices();
+	List<BeautyServiceDto> getActiveServices();
 
-	List<BeautyService> getAllServices();
+	List<BeautyServiceDto> getAllServices();
 
-	BeautyService addService(BeautyService service);
+	BeautyServiceDto addService(BeautyServiceDto beautyServiceDto);
 
-	BeautyService updateService(Long id, BeautyService updated);
+	BeautyServiceDto updateService(Long id, BeautyServiceDto updated);
 
-	BeautyService toggleService(Long id);
+	BeautyServiceDto toggleService(Long id);
 
 }

@@ -1,7 +1,6 @@
-package com.glamify.service;
+package com.glamify.exception;
 
 import com.glamify.entity.AppointmentStatus;
-import com.glamify.exception.InvalidAppointmentStatusException;
 
 public class AppointmentStatusValidator {
 

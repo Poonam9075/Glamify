@@ -1,17 +1,15 @@
 package com.glamify.service;
 
 import java.util.List;
-import java.util.Optional;
-
-import com.glamify.entity.Professional;
+import com.glamify.dto.ProfessionalDto;
 
 public interface ProfessionalService {
 
-	Optional<Professional> findByEmail(String email);
+	ProfessionalDto findByEmail(String email);
 
-    List<Professional> searchBySpeciality(String speciality);
+    List<ProfessionalDto> searchBySpeciality(String speciality);
     
-    List<Professional> getAllProfessionals();
+    List<ProfessionalDto> getAllProfessionals();
 
-    Professional updateProfile(Long id, Professional updated);
+    ProfessionalDto updateProfile(Long id, ProfessionalDto updated);
 }

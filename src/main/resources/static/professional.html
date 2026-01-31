@@ -191,11 +191,11 @@ function loadAvailableAppointments() {
         data.forEach(a => {
 
             // ---- service count ----
-            const serviceNames = a.bookedServices
-			    ? a.bookedServices.map(bs => bs.beautyService.name).join(",")
+            const serviceNames = a.services
+			    ? a.services.map(bs => bs.serviceName).join(",")
 			    : "";
 			
-			const serviceCount = a.bookedServices ? a.bookedServices.length : 0;
+			const serviceCount = a.services ? a.services.length : 0;
 			
 			const servicesBadge = serviceCount > 0
 		    ? `
@@ -209,8 +209,8 @@ function loadAvailableAppointments() {
 		    : "";
 
             // ---- total time ----
-            const totalMinutes = a.bookedServices
-                ? a.bookedServices.reduce(
+            const totalMinutes = a.services
+                ? a.services.reduce(
                     (sum, bs) => sum + bs.estimatedTime, 0)
                 : 0;
 
@@ -222,7 +222,7 @@ function loadAvailableAppointments() {
 	           	</td>
                 <td>${a.location}</td>
                 <td>${getStatusBadge(a.status)}</td>
-                <td>${a.customer?.fullName || ""}</td>
+                <td>${a.customerName}</td>
                 <td>${servicesBadge}</td>
                 <td data-value="${totalMinutes}">
 	                ${formatDuration(totalMinutes)}
@@ -268,11 +268,11 @@ function loadAssignedAppointments() {
         data.forEach(a => {
 
             // ---- services list ----
-            const serviceNames = a.bookedServices
-			    ? a.bookedServices.map(bs => bs.beautyService.name).join(",")
+            const serviceNames = a.services
+			    ? a.services.map(bs => bs.serviceName).join(",")
 			    : "";
 			
-			const serviceCount = a.bookedServices ? a.bookedServices.length : 0;
+			const serviceCount = a.services ? a.services.length : 0;
 			
 			const servicesBadge = serviceCount > 0
 		    ? `
@@ -286,8 +286,8 @@ function loadAssignedAppointments() {
 		    : "";
 
             // ---- total time ----
-            const totalMinutes = a.bookedServices
-			    ? a.bookedServices.reduce(
+            const totalMinutes = a.services
+			    ? a.services.reduce(
 			        (sum, bs) => sum + bs.estimatedTime, 0)
 			    : 0;
 
@@ -315,12 +315,12 @@ function loadAssignedAppointments() {
 	            </td>
                 <td>${a.location}</td>
                 <td>${getStatusBadge(a.status)}</td>
-                <td>${a.customer?.fullName || ""}</td>
+                <td>${a.customerName}</td>
                 <td>${servicesBadge}</td>
                 <td data-value="${totalMinutes}">
 	                ${formatDuration(totalMinutes)}
 	            </td>
-	            <td>${a.professional?.fullName || "—"}</td>
+	            <td>${a.professionalName}</td>
                 <td>${action}</td>
             </tr>`;
         });

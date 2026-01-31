@@ -1,7 +1,11 @@
 package com.glamify.service;
 
 import java.util.List;
+
 import org.springframework.stereotype.Service;
+
+import com.glamify.dto.BeautyServiceDto;
+import com.glamify.dto.mapper.BeautyServiceMapper;
 import com.glamify.entity.BeautyService;
 import com.glamify.repository.BeautyServiceRepository;
 
@@ -15,22 +19,26 @@ public class BeautyServicesServiceImpl implements BeautyServicesService {
     }
 	
     @Override
-    public List<BeautyService> getActiveServices() {
-        return beautyServiceRepository.findByActiveTrue();
+    public List<BeautyServiceDto> getActiveServices() {
+    	
+        return BeautyServiceMapper.toDtoList(beautyServiceRepository.findByActiveTrue());
     }
     
     @Override
-    public List<BeautyService> getAllServices() {
-        return beautyServiceRepository.findAll();
+    public List<BeautyServiceDto> getAllServices() {
+        return BeautyServiceMapper.toDtoList(beautyServiceRepository.findAll());
     }
     
     @Override
-    public BeautyService addService(BeautyService service) {
-        return beautyServiceRepository.save(service);
+    public BeautyServiceDto addService(BeautyServiceDto beautyServiceDto) {
+    	
+    	BeautyService beautyService = BeautyServiceMapper.toEntity(beautyServiceDto);
+    	
+        return BeautyServiceMapper.toDto(beautyServiceRepository.save(beautyService));
     }
     
     @Override
-    public BeautyService updateService(Long id, BeautyService updated) {
+    public BeautyServiceDto updateService(Long id, BeautyServiceDto updated) {
 
         BeautyService existing = beautyServiceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Service not found"));
@@ -43,11 +51,11 @@ public class BeautyServicesServiceImpl implements BeautyServicesService {
 
         beautyServiceRepository.save(existing);
         
-        return existing;
+        return BeautyServiceMapper.toDto(existing);
     }
     
     @Override
-    public BeautyService toggleService(Long id) {
+    public BeautyServiceDto toggleService(Long id) {
 
         BeautyService beautyService = beautyServiceRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Service not found"));
@@ -55,6 +63,6 @@ public class BeautyServicesServiceImpl implements BeautyServicesService {
         beautyService.setActive(!beautyService.isActive());
         beautyServiceRepository.save(beautyService);
 
-        return beautyService;
+        return BeautyServiceMapper.toDto(beautyService);
     }
 }

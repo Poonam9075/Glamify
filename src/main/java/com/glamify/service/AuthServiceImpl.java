@@ -4,10 +4,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.glamify.dto.CustomerRegisterRequest;
-import com.glamify.dto.LoginRequest;
-import com.glamify.dto.LoginResponse;
+import com.glamify.dto.UserLoginRequest;
+import com.glamify.dto.UserLoginResponse;
 import com.glamify.dto.ProfessionalRegisterRequest;
-import com.glamify.dto.RegisterResponse;
+import com.glamify.dto.UserRegisterResponse;
 import com.glamify.entity.Customer;
 import com.glamify.entity.Gender;
 import com.glamify.entity.Professional;
@@ -35,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
     // ---------------- CUSTOMER REGISTRATION ----------------
 
     @Override
-    public RegisterResponse registerCustomer(CustomerRegisterRequest request) {
+    public UserRegisterResponse registerCustomer(CustomerRegisterRequest request) {
 
         Customer customer = new Customer();
         customer.setFullName(request.getFullName());
@@ -54,7 +54,7 @@ public class AuthServiceImpl implements AuthService {
     // ---------------- PROFESSIONAL REGISTRATION ----------------
 
     @Override
-    public RegisterResponse registerProfessional(ProfessionalRegisterRequest request) {
+    public UserRegisterResponse registerProfessional(ProfessionalRegisterRequest request) {
 
         Professional professional = new Professional();
         professional.setFullName(request.getFullName());
@@ -81,8 +81,8 @@ public class AuthServiceImpl implements AuthService {
         return Gender.valueOf(gender.toUpperCase());
     }
 
-    private RegisterResponse mapToResponse(User user) {
-        RegisterResponse response = new RegisterResponse();
+    private UserRegisterResponse mapToResponse(User user) {
+        UserRegisterResponse response = new UserRegisterResponse();
         response.setId(user.getUserId());
         response.setFullName(user.getFullName());
         response.setEmail(user.getEmail());
@@ -93,7 +93,7 @@ public class AuthServiceImpl implements AuthService {
     }
     
     @Override
-    public LoginResponse login(LoginRequest request) {
+    public UserLoginResponse login(UserLoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
@@ -118,7 +118,7 @@ public class AuthServiceImpl implements AuthService {
                 user.getRole().name()
         );
 
-        LoginResponse response = new LoginResponse();
+        UserLoginResponse response = new UserLoginResponse();
         response.setToken(token);
         response.setEmail(user.getEmail());
         response.setFullName(user.getFullName());

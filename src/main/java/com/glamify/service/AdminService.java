@@ -1,7 +1,9 @@
 package com.glamify.service;
 
 import java.util.List;
+
 import com.glamify.dto.PendingProfessionalResponse;
+import com.glamify.dto.UserDto;
 import com.glamify.entity.User;
 
 public interface AdminService {
@@ -12,9 +14,9 @@ public interface AdminService {
 
     void deactivateUser(Long userId);
 
-	List<User> getAllUsers();
+	List<UserDto> getAllUsers();
 
-	String updateUser(Long id, User updatedUser);
+	String updateUser(Long id, UserDto updatedUser);
 
 	User toggleUser(Long id);
 }

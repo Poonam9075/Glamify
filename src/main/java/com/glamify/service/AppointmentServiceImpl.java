@@ -1,14 +1,20 @@
 package com.glamify.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.glamify.dto.AppointmentResponse;
-import com.glamify.dto.CustomerBookingRequest;
+
+import com.glamify.dto.AppointmentBookingRequest;
+import com.glamify.dto.AppointmentDto;
+import com.glamify.dto.AppointmentViewDto;
+import com.glamify.dto.mapper.AppointmentMapper;
+import com.glamify.dto.mapper.AppointmentViewMapper;
 import com.glamify.entity.Appointment;
 import com.glamify.entity.AppointmentStatus;
 import com.glamify.entity.BeautyService;
@@ -57,36 +63,42 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public List<Appointment> getAllAppointments() {
-    	return appointmentRepo.findAll();
+    public List<AppointmentDto> getAllAppointments() {
+    	
+    	List<Appointment> appointmentList = appointmentRepo.findAll(); 
+    	    	
+    	return AppointmentMapper.toDtoList(appointmentList);
     }
     
     
     @Override
-    public List<Appointment> getAppointmentsByProfessional() {
+    public List<AppointmentViewDto> getAppointmentsByProfessional() {
 
-            String email = SecurityContextHolder.getContext()
-                    .getAuthentication().getName();
-            
-            Professional professional = professionalRepo.findByEmail(email).orElseThrow();
-            
-            return appointmentRepo.findByProfessionalUserId(professional.getUserId());
-
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        
+        Professional professional = professionalRepo.findByEmail(email).orElseThrow();
+        
+        List<Appointment> appointmentList = appointmentRepo.findByProfessionalUserId(professional.getUserId());
+        
+        return AppointmentViewMapper.toViewDtoList(appointmentList);
     }
     
     @Override
-    public List<Appointment> getUnacceptedAppointments() {
-        return appointmentRepo.findByProfessionalIsNullAndStatus(
-                AppointmentStatus.CREATED
-        );
+    public List<AppointmentViewDto> getUnacceptedAppointments() {
+        
+        List<Appointment> appointmentList = appointmentRepo.findByProfessionalIsNullAndStatus(
+									                AppointmentStatus.CREATED);
+        
+        return AppointmentViewMapper.toViewDtoList(appointmentList);
     }
     
     
     // =================================================
-    // 1️⃣ CUSTOMER BOOKING (AUTO-ASSIGN PROFESSIONAL)
+    // 1️⃣ CUSTOMER BOOKING
     // =================================================
     @Override
-    public AppointmentResponse createAppointmentForCustomer(CustomerBookingRequest req) {
+    public AppointmentDto createAppointmentForCustomer(AppointmentBookingRequest req) {
 
         String email = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
@@ -109,7 +121,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         double totalDiscountedPrice = 0;
 
         Map<String, Integer> serviceDiscountSnapshot = new HashMap<>();
-
+        List<BookedService> bookedServices = new ArrayList<>();
         
         for (Long serviceId : req.getServiceIds()) {
             BeautyService service = serviceRepo.findById(serviceId)
@@ -120,7 +132,8 @@ public class AppointmentServiceImpl implements AppointmentService {
             bs.setBeautyService(service);
             bs.setPriceAtBooking(service.getPrice());
             bs.setEstimatedTime(service.getDuration());
-
+            bookedServices.add(bs);
+            
             bookedServiceRepo.save(bs);
             
             double price = service.getPrice();
@@ -133,6 +146,8 @@ public class AppointmentServiceImpl implements AppointmentService {
             
             serviceDiscountSnapshot.put(service.getName(), service.getDiscount());
         }
+        
+        saved.setBookedServices(bookedServices);
 
         Invoice invoice = new Invoice();
         invoice.setAppointment(saved);
@@ -142,28 +157,32 @@ public class AppointmentServiceImpl implements AppointmentService {
         invoice.setDateTime(LocalDateTime.now());
         invoiceRepo.save(invoice);
 
-        AppointmentResponse response = new AppointmentResponse();
-        response.setAppointmentId(saved.getAppointmentId());
-        response.setCustomerId(saved.getCustomer().getUserId());
-        response.setDateTime(saved.getDateTime());
-        response.setLocation(saved.getLocation());
-        response.setStatus(saved.getStatus());
-        response.setBookedServices(req.getServiceIds());
+//        AppointmentDto appointmentDto = new AppointmentDto();
+//        appointmentDto.setAppointmentId(saved.getAppointmentId());
+//        appointmentDto.setCustomerId(saved.getCustomer().getUserId());
+//        appointmentDto.setDateTime(saved.getDateTime());
+//        appointmentDto.setLocation(saved.getLocation());
+//        appointmentDto.setStatus(saved.getStatus());
+//        appointmentDto.setBookedServices(req.getServiceIds());
+        
+        AppointmentDto appointmentDto = AppointmentMapper.toDto(appointment);
         
         //return saved;
-        return response;
+        return appointmentDto;
     }
 
     @Override
-    public Appointment getAppointmentDetails(Long appointmentId) {
+    public AppointmentDto getAppointmentDetails(Long appointmentId) {
 
-        return appointmentRepo.findById(appointmentId)
+    	Appointment appointment = appointmentRepo.findById(appointmentId)
                 .orElseThrow(() ->
-                        new RuntimeException("Appointment not found"));
+                new RuntimeException("Appointment not found"));
+    	
+        return AppointmentMapper.toDto(appointment);
     }
     
     @Override
-    public Appointment acceptAppointmentByProfessional(Long appointmentId) {
+    public AppointmentDto acceptAppointmentByProfessional(Long appointmentId) {
 
         String email = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
@@ -181,13 +200,13 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setProfessional(professional);
         appointment.setStatus(AppointmentStatus.ACCEPTED);
 
-        return appointmentRepo.save(appointment);
+        return AppointmentMapper.toDto(appointmentRepo.save(appointment));
     }
 
 
     // Update appointment status
     @Override
-    public Appointment updateStatus(Long appointmentId,
+    public AppointmentDto updateStatus(Long appointmentId,
                                     AppointmentStatus newStatus) {
 
         Appointment appointment = appointmentRepo.findById(appointmentId)
@@ -218,14 +237,14 @@ public class AppointmentServiceImpl implements AppointmentService {
                     "Invalid status change from " + current + " to " + newStatus);
         }
 
-        return appointmentRepo.save(appointment);
+        return AppointmentMapper.toDto(appointmentRepo.save(appointment));
     }
 
     // =================================================
     // 5️⃣ CUSTOMER CANCEL
     // =================================================
     @Override
-    public Appointment cancelAppointment(Long id) {
+    public AppointmentDto cancelAppointment(Long id) {
         return updateStatus(id, AppointmentStatus.CANCELLED);
     }
 

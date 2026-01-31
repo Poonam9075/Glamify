@@ -1,18 +1,18 @@
 package com.glamify.service;
 
 import java.util.List;
-import java.util.Optional;
 
-import com.glamify.entity.Appointment;
+import com.glamify.dto.AppointmentViewDto;
+import com.glamify.dto.CustomerDto;
 import com.glamify.entity.Customer;
 
 public interface CustomerService {
 
     Customer register(Customer customer);
 
-    Optional<Customer> getByEmail(String email);
+    CustomerDto getByEmail(String email);
 
-    List<Customer> getAllCustomers();
+    List<CustomerDto> getAllCustomers();
     
-    public List<Appointment> getMyAppointments();
+    public List<AppointmentViewDto> getMyAppointments();
 }

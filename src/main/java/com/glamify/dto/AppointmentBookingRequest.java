@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 @Data
-public class CustomerBookingRequest {
+public class AppointmentBookingRequest {
 
     private String location;
 

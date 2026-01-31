@@ -1,31 +1,30 @@
 package com.glamify.service;
 
 import java.util.List;
-
-import com.glamify.dto.AppointmentResponse;
-import com.glamify.dto.CustomerBookingRequest;
-import com.glamify.entity.Appointment;
+import com.glamify.dto.AppointmentBookingRequest;
+import com.glamify.dto.AppointmentDto;
+import com.glamify.dto.AppointmentViewDto;
 import com.glamify.entity.AppointmentStatus;
 import com.glamify.entity.Payment;
 
 public interface AppointmentService {
 
-	Appointment getAppointmentDetails(Long appointmentId);
+	AppointmentDto getAppointmentDetails(Long appointmentId);
 
-	List<Appointment> getAppointmentsByProfessional();
+	List<AppointmentViewDto> getAppointmentsByProfessional();
 	
-	Appointment acceptAppointmentByProfessional(Long appointmentId);
+	AppointmentDto acceptAppointmentByProfessional(Long appointmentId);
 
-	Appointment updateStatus(Long appointmentId, AppointmentStatus newStatus);
+	AppointmentDto updateStatus(Long appointmentId, AppointmentStatus newStatus);
 
-	Appointment cancelAppointment(Long id);
+	AppointmentDto cancelAppointment(Long id);
 
 	Payment makePayment(Long invoiceId, String method);
 
-	AppointmentResponse createAppointmentForCustomer(CustomerBookingRequest req);
+	AppointmentDto createAppointmentForCustomer(AppointmentBookingRequest req);
 
-	List<Appointment> getUnacceptedAppointments();
+	List<AppointmentViewDto> getUnacceptedAppointments();
 
-	List<Appointment> getAllAppointments();
+	List<AppointmentDto> getAllAppointments();
 
 }

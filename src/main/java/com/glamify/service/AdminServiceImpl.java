@@ -1,11 +1,15 @@
 package com.glamify.service;
 
 import java.util.List;
+
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+
 import com.glamify.dto.PendingProfessionalResponse;
+import com.glamify.dto.UserDto;
+import com.glamify.dto.mapper.UserMapper;
 import com.glamify.entity.Professional;
 import com.glamify.entity.User;
 import com.glamify.repository.ProfessionalRepository;
@@ -65,14 +69,14 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserDto> getAllUsers() {
+        return UserMapper.toDtolist(userRepository.findAll());
     }
 	
     @Override
     public String updateUser(
             @PathVariable Long id,
-            @RequestBody User updatedUser) {
+            @RequestBody UserDto updatedUserDto) {
 
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -84,20 +88,20 @@ public class AdminServiceImpl implements AdminService {
                 .getName();
 
         if (existingUser.getEmail().equals(currentEmail)
-                && !updatedUser.isActive()) {
+                && !updatedUserDto.isActive()) {
             return "Admin cannot disable own account";
         }
 
         // Update editable fields
-        existingUser.setFullName(updatedUser.getFullName());
-        existingUser.setEmail(updatedUser.getEmail());
-        existingUser.setRole(updatedUser.getRole());
-        existingUser.setActive(updatedUser.isActive());
+        existingUser.setFullName(updatedUserDto.getFullName());
+        existingUser.setEmail(updatedUserDto.getEmail());
+        existingUser.setRole(updatedUserDto.getUserRole());
+        existingUser.setActive(updatedUserDto.isActive());
 
         // Update password ONLY if provided
-        if (updatedUser.getPassword() != null
-                && !updatedUser.getPassword().isBlank()) {
-            existingUser.setPassword(updatedUser.getPassword());
+        if (updatedUserDto.getPassword() != null
+                && !updatedUserDto.getPassword().isBlank()) {
+            existingUser.setPassword(updatedUserDto.getPassword());
         }
 
         userRepository.save(existingUser);

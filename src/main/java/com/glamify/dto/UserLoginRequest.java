@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class LoginRequest {
+public class UserLoginRequest {
 	@NotBlank
     @JsonProperty("username")
 	private String email;

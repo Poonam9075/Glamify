@@ -8,10 +8,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.glamify.dto.CustomerRegisterRequest;
-import com.glamify.dto.LoginRequest;
-import com.glamify.dto.LoginResponse;
+import com.glamify.dto.UserLoginRequest;
+import com.glamify.dto.UserLoginResponse;
 import com.glamify.dto.ProfessionalRegisterRequest;
-import com.glamify.dto.RegisterResponse;
+import com.glamify.dto.UserRegisterResponse;
 import com.glamify.security.JwtUtil;
 import com.glamify.service.AuthService;
 
@@ -31,24 +31,24 @@ public class AuthController {
     }
     
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(
-            @Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<UserLoginResponse> login(
+            @Valid @RequestBody UserLoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
     
     @PostMapping("/register/customer")
-    public ResponseEntity<RegisterResponse> registerCustomer(
+    public ResponseEntity<UserRegisterResponse> registerCustomer(
             @Valid @RequestBody CustomerRegisterRequest request) {
 
-        RegisterResponse response = authService.registerCustomer(request);
+        UserRegisterResponse response = authService.registerCustomer(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/register/professional")
-    public ResponseEntity<RegisterResponse> registerProfessional(
+    public ResponseEntity<UserRegisterResponse> registerProfessional(
             @Valid @RequestBody ProfessionalRegisterRequest request) {
 
-        RegisterResponse response = authService.registerProfessional(request);
+        UserRegisterResponse response = authService.registerProfessional(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

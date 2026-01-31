@@ -3,7 +3,7 @@ package com.glamify.dto;
 import lombok.Data;
 
 @Data
-public class RegisterResponse {
+public class UserRegisterResponse {
 
     private Long id;
     private String fullName;
