@@ -16,8 +16,12 @@ public class AppointmentMapper {
         appointmentDto.setCustomerId(appointment.getCustomer().getUserId());
         appointmentDto.setDateTime(appointment.getDateTime());
         appointmentDto.setLocation(appointment.getLocation());
-        appointmentDto.setStatus(appointment.getStatus());
+        appointmentDto.setStatus(appointment.getStatus().toString());
         appointmentDto.setBookedServiceIds(appointment.getBookedServices().stream().map(BookedService::getId).toList());
+        appointmentDto.setAmount(appointment.getAmount());
+        
+        if(appointment.getPayment() != null)
+        	appointmentDto.setPaymentStatus(appointment.getPayment().getStatus().toString());
         
         return appointmentDto;
 	}

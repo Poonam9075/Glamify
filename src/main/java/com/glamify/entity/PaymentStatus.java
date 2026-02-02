@@ -1,5 +1,8 @@
 package com.glamify.entity;
 
 public enum PaymentStatus {
-	SUCCESS, FAILED
+	INITIATED,
+    SUCCESS,
+    FAILED,
+    REFUNDED, PENDING
 }

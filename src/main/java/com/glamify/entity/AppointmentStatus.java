@@ -1,7 +1,10 @@
 package com.glamify.entity;
 
 public enum AppointmentStatus {
-    CREATED,
+	REQUESTED,
+	//CREATED,
+	CONFIRMED,
+    PAYMENT_PENDING,
     ACCEPTED,
     IN_PROGRESS,
     COMPLETED,

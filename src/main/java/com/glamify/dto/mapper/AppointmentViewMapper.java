@@ -16,8 +16,9 @@ public class AppointmentViewMapper {
         dto.setAppointmentId(appointment.getAppointmentId());
         dto.setDateTime(appointment.getDateTime());
         dto.setLocation(appointment.getLocation());
-        dto.setStatus(appointment.getStatus());
-
+        dto.setStatus(appointment.getStatus().toString());
+        dto.setAmount(appointment.getAmount());
+        
         dto.setCustomerName(
             appointment.getCustomer() != null
                 ? appointment.getCustomer().getFullName()
@@ -45,6 +46,12 @@ public class AppointmentViewMapper {
                 .sum();
 
         dto.setTotalEstimatedTime(totalTime);
+        
+        if(appointment.getPayment() != null && appointment.getPayment().getInvoice() != null)
+        {
+        	dto.setInvoiceNumber(appointment.getPayment().getInvoice().getInvoiceNumber());
+        	dto.setPaymentStatus(appointment.getPayment().getStatus().toString());
+        }
 
         return dto;
     }

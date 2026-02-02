@@ -1,5 +1,7 @@
 package com.glamify.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,6 +24,7 @@ import com.glamify.entity.BookedService;
 import com.glamify.entity.Customer;
 import com.glamify.entity.Invoice;
 import com.glamify.entity.Payment;
+import com.glamify.entity.PaymentStatus;
 import com.glamify.entity.Professional;
 import com.glamify.exception.InvalidAppointmentStatusException;
 import com.glamify.repository.AppointmentRepository;
@@ -88,7 +91,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     public List<AppointmentViewDto> getUnacceptedAppointments() {
         
         List<Appointment> appointmentList = appointmentRepo.findByProfessionalIsNullAndStatus(
-									                AppointmentStatus.CREATED);
+									                AppointmentStatus.CONFIRMED);
         
         return AppointmentViewMapper.toViewDtoList(appointmentList);
     }
@@ -110,11 +113,11 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setCustomer(customer);
         appointment.setLocation(req.getLocation());
         appointment.setDateTime(req.getDateTime());
-        appointment.setStatus(AppointmentStatus.CREATED);
-
+        appointment.setStatus(AppointmentStatus.REQUESTED);
+        
         // 🚫 NO professional assignment here
 
-        Appointment saved = appointmentRepo.save(appointment);
+        //appointmentRepo.save(appointment);
 
         double totalPrice = 0;        
         double totalDiscount = 0;
@@ -128,7 +131,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                     .orElseThrow(() -> new RuntimeException("Service not found"));
 
             BookedService bs = new BookedService();
-            bs.setAppointment(saved);
+            bs.setAppointment(appointment);
             bs.setBeautyService(service);
             bs.setPriceAtBooking(service.getPrice());
             bs.setEstimatedTime(service.getDuration());
@@ -147,15 +150,18 @@ public class AppointmentServiceImpl implements AppointmentService {
             serviceDiscountSnapshot.put(service.getName(), service.getDiscount());
         }
         
-        saved.setBookedServices(bookedServices);
+        appointment.setBookedServices(bookedServices);
+        appointment.setAmount(totalDiscountedPrice);
+        appointmentRepo.save(appointment);
+                
 
-        Invoice invoice = new Invoice();
-        invoice.setAppointment(saved);
-        invoice.setTotal(totalPrice);
-        invoice.setCouponDiscount(totalDiscount);
-        invoice.setFinalAmount(totalDiscountedPrice);
-        invoice.setDateTime(LocalDateTime.now());
-        invoiceRepo.save(invoice);
+//        Invoice invoice = new Invoice();
+//        invoice.setAppointment(saved);
+//        invoice.setTotal(totalPrice);
+//        invoice.setCouponDiscount(totalDiscount);
+//        invoice.setFinalAmount(totalDiscountedPrice);
+//        invoice.setDateTime(LocalDateTime.now());
+//        invoiceRepo.save(invoice);
 
 //        AppointmentDto appointmentDto = new AppointmentDto();
 //        appointmentDto.setAppointmentId(saved.getAppointmentId());
@@ -165,10 +171,9 @@ public class AppointmentServiceImpl implements AppointmentService {
 //        appointmentDto.setStatus(saved.getStatus());
 //        appointmentDto.setBookedServices(req.getServiceIds());
         
-        AppointmentDto appointmentDto = AppointmentMapper.toDto(appointment);
         
         //return saved;
-        return appointmentDto;
+        return AppointmentMapper.toDto(appointment);
     }
 
     @Override
@@ -215,7 +220,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         AppointmentStatus current = appointment.getStatus();
 
         // Validate transitions
-        if (current == AppointmentStatus.CREATED &&
+        if (current == AppointmentStatus.CONFIRMED &&
                 (newStatus == AppointmentStatus.ACCEPTED ||
                  newStatus == AppointmentStatus.CANCELLED)) {
 
@@ -248,22 +253,33 @@ public class AppointmentServiceImpl implements AppointmentService {
         return updateStatus(id, AppointmentStatus.CANCELLED);
     }
 
-    // =================================================
-    // 6️⃣ PAYMENT
-    // =================================================
-    @Override
-    public Payment makePayment(Long invoiceId, String method) {
-
-        Invoice invoice = invoiceRepo.findById(invoiceId)
-                .orElseThrow(() -> new RuntimeException("Invoice not found"));
-
-        Payment payment = new Payment();
-        payment.setInvoice(invoice);
-        payment.setAmount(invoice.getFinalAmount());
-        payment.setPaymentMethod(method);
-        payment.setStatus("SUCCESS");
-        //payment.setPaymentDate(LocalDateTime.now());
-
-        return paymentRepo.save(payment);
+//    // =================================================
+//    // 6️⃣ PAYMENT
+//    // =================================================
+//    @Override
+//    public Payment makePayment(Long invoiceId, String method) {
+//
+//        Invoice invoice = invoiceRepo.findById(invoiceId)
+//                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+//
+//        Payment payment = new Payment();
+//        payment.setInvoice(invoice);
+//        payment.setAmount(invoice.getTotalAmount());
+//        payment.setPaymentMethod(method);
+//        payment.setStatus(PaymentStatus.SUCCESS);
+//        //payment.setPaymentDate(LocalDateTime.now());
+//
+//        return paymentRepo.save(payment);
+//    }
+    
+    @Transactional
+    public void markPaymentPending(Appointment appointment) {
+        appointment.setStatus(AppointmentStatus.PAYMENT_PENDING);
     }
+
+    @Transactional
+    public void confirmAppointment(Appointment appointment) {
+        appointment.setStatus(AppointmentStatus.CONFIRMED);
+    }
+
 }

@@ -9,11 +9,19 @@ public class AppointmentStatusValidator {
 
         switch (current) 
         {
-            case CREATED -> {
+	        case REQUESTED -> {
+	            if (next != AppointmentStatus.CONFIRMED &&
+	                next != AppointmentStatus.CANCELLED) {
+	                throw new InvalidAppointmentStatusException(
+	                    "REQUESTED can only move to CONFIRMED or CANCELLED");
+	            }
+	        }
+        
+            case CONFIRMED -> {
                 if (next != AppointmentStatus.ACCEPTED &&
                     next != AppointmentStatus.CANCELLED) {
                     throw new InvalidAppointmentStatusException(
-                        "CREATED can only move to ACCEPTED or CANCELLED");
+                        "CONFIRMED can only move to ACCEPTED or CANCELLED");
                 }
             }
 

@@ -19,6 +19,73 @@
 	
 </head>
 
+
+<!-- Dummy Payment Gateway Modal (Confirm-Appointment style) -->
+<div class="modal fade" id="paymentGatewayModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content overflow-hidden">
+
+      <!-- BLACK HEADER (same as Confirm Appointment) -->
+      <div class="bg-dark text-white px-3 py-2 d-flex justify-content-between align-items-center">
+        <span class="fw-bold">Secure Payment</span>
+        <button type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- AMOUNT SECTION (like summary block) -->
+        <div class="border rounded p-3 mb-3 text-center">
+          <div class="text-muted small">Amount Payable</div>
+          <div class="fs-4 fw-bold text-primary">
+            ₹ <span id="pgAmount"></span>
+          </div>
+        </div>
+
+        <!-- PAYMENT DETAILS SECTION -->
+        <div class="border rounded p-3 mb-3">
+          <div class="fw-bold mb-2">Payment Details</div>
+
+          <div class="mb-3">
+            <label class="form-label">Card Number</label>
+            <input class="form-control" placeholder="4111 1111 1111 1111">
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label class="form-label">Expiry</label>
+              <input class="form-control" placeholder="MM/YY">
+            </div>
+            <div class="col">
+              <label class="form-label">CVV</label>
+              <input class="form-control" placeholder="123" type="password">
+            </div>
+          </div>
+        </div>
+
+        <!-- STATUS (same spacing style) -->
+        <div id="pgStatus" class="text-center mb-3"></div>
+
+        <!-- ACTIONS (same as confirm modal footer) -->
+        <div class="d-flex justify-content-end gap-2">
+          <button class="btn btn-outline-secondary"
+                  data-bs-dismiss="modal">
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="pgPayBtn">
+            Pay ₹<span id="pgPayBtnAmount"></span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
 <!-- Booking Summary Modal -->
 <div class="modal fade" id="summaryModal" tabindex="-1">
 	<div class="modal-dialog modal-lg modal-dialog-centered">
@@ -159,9 +226,12 @@
 				</button>
 			</li>
 			<li class="nav-item">
-				<button class="nav-link" data-bs-toggle="tab"
-					data-bs-target="#appointmentsTab" type="button">
-					<i class="bi bi-calendar-check me-1"></i> My Appointments
+				<button class="nav-link"
+				        id="appointments-tab-btn"
+				        data-bs-toggle="tab"
+				        data-bs-target="#appointmentsTab"
+				        type="button">
+				    <i class="bi bi-calendar-check me-1"></i> My Appointments
 				</button>
 			</li>
 		</ul>
@@ -275,6 +345,7 @@
 										<th class="sortable">Total Time</th>										
 										<th class="sortable">Professional</th>
 										<th>Action</th>
+										<th>Invoice</th>
 									</tr>
 								</thead>
 
@@ -290,14 +361,15 @@
 	<!-- container -->
 
 
-	<!-- JS -->
-	<script
-		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-	<script src="api.js"></script>
+<!-- JS -->
+<script
+	src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="api.js"></script>
 
-	<script>
+<script>
 let cart = [];
 let summaryModalInstance;
+let pendingAppointmentId = null;
 
 
 // -------- APPOINTMENTS --------
@@ -331,12 +403,61 @@ function loadAppointments() {
 
 
                 let action = "";
+                let invoiceAction = "";
 
-                if (a.status === "CREATED" || a.status === "ACCEPTED") {
-                    action = `<button class="btn btn-sm btn-danger"
-                              onclick="cancel(${a.appointmentId})">Cancel</button>`;
-                }
+//                  // 1️⃣ Download Invoice (payment success)
+//                  if (a.invoiceNumber) {
+//                      action += `
+//                        <button class="btn btn-sm btn-outline-primary me-1"
+//                                onclick="downloadInvoice('${a.invoiceNumber}')">
+//                          Download Invoice
+//                        </button>
+//                      `;
+//                  }
 
+                 // 2️⃣ Pay Now (payment pending / failed)
+                 if (a.status === "REQUESTED") {
+                     action += `
+                       <button class="btn btn-sm btn-success me-1"
+                               onclick="openDummyPaymentGateway(${a.appointmentId}, ${a.amount})">
+                         Pay Now
+                       </button>
+                     `;
+                 }
+
+                 // 3️⃣ Cancel (allowed only if unpaid & not completed)
+                 if (
+                     //!a.invoiceNumber &&
+                     a.status !== "COMPLETED" &&
+                     a.status !== "IN_PROGRESS" &&
+                     a.status !== "CANCELLED"
+                 ) {
+                     action += `
+                       <button class="btn btn-sm btn-danger"
+                               onclick="cancel(${a.appointmentId})">
+                         Cancel
+                       </button>
+                     `;
+                 }
+              
+                 if (!action) {
+                	    action = `<span class="text-muted">-</span>`;
+                	}
+                 
+              // 📄 Invoice column
+                 if (a.invoiceNumber) {
+                	 invoiceAction = `
+                		  <button class="btn btn-sm btn-primary"
+                		          onclick="downloadInvoice('${a.invoiceNumber}')">
+                		    Download Invoice
+                		  </button>
+                		`;
+                 } else {
+                     invoiceAction = `<span class="text-muted">-</span>`;
+                 }
+              
+              
+                 
                 t.innerHTML += `
                 <tr>
                     <td>${a.appointmentId}</td>
@@ -353,6 +474,7 @@ function loadAppointments() {
                     <td>${a.professionalName || "—"}</td>
 
                     <td>${action}</td>
+                    <td>${invoiceAction}</td>
                 </tr>`;
             });
             
@@ -580,7 +702,18 @@ function openSummaryModal() {
 // -------- BOOK --------
 function confirmBooking() {
 
-	clearValidation();
+    clearValidation();
+
+    // 🔁 IF appointment already exists → retry payment ONLY
+    if (pendingAppointmentId !== null) {
+        const payableAmount =
+            Number(document.getElementById("totalPayable").innerText);
+
+        openDummyPaymentGateway(pendingAppointmentId, payableAmount);
+        return;
+    }
+
+    // -------- validation (UNCHANGED) --------
     let valid = true;
 
     const location = document.getElementById("location");
@@ -605,60 +738,40 @@ function confirmBooking() {
         valid = false;
     }
 
-//     if (cart.length === 0) {
-//         document.getElementById("cartError").classList.remove("d-none");
-//         valid = false;
-//     }
-
-    if (!valid) return;
-	
-    // 1️⃣ Validate cart
     if (!cart || cart.length === 0) {
         showToast("Please add at least one service", "warning");
         return;
     }
 
-    // 3️⃣ Extract VALID service IDs
-    const serviceIds = cart
-        .map(c => Number(c.serviceId))
-        .filter(id => !isNaN(id));
+    if (!valid) return;
 
-    if (serviceIds.length === 0) {
-        showToast("No valid services selected", "error");
-        return;
-    }
-
-    // 4️⃣ Prepare payload (exact backend match)
+    // -------- CREATE appointment ONLY ONCE --------
     const payload = {
-        location: location.value,
         dateTime: `${date.value}T${time.value}:00`,
-        serviceIds: serviceIds
+        location: location.value,
+        serviceIds: cart.map(c => Number(c.serviceId))
     };
 
-    // 5️⃣ Call API
     fetch("/api/customer/appointment", {
         method: "POST",
-        headers: {
-            ...authHeaders(),
-            "Content-Type": "application/json"
-        },
+        headers: authHeaders(),
         body: JSON.stringify(payload)
     })
-    .then(res => {
-        if (!res.ok) throw new Error("Booking failed");
-        return res.json();
+    .then(res => res.json())
+    .then(data => {
+        summaryModalInstance.hide();
+
+        // 🔥 STORE appointmentId for retries
+        pendingAppointmentId = data.appointmentId;
+
+        const payableAmount =
+            Number(document.getElementById("totalPayable").innerText);
+
+        openDummyPaymentGateway(data.appointmentId, payableAmount);
     })
-    .then(() => {
-        showToast("Appointment booked successfully");
-        cart = [];            // clear cart
-        renderCart();         // refresh cart UI
-        loadAppointments();   // refresh appointments table
-        summaryModalInstance.hide(); // ✅ CLOSE SUMMARY MODAL
-    })
-    .catch(() => {
-        showToast("Failed to book appointment", "error");
-    });
+    .catch(() => showToast("Booking failed", "error"));
 }
+
 
 function clearValidation() {
     ["location", "date", "time"].forEach(id => {
@@ -789,6 +902,102 @@ function addServiceFromCatalog(id, name, price, discount, duration) {
     showToast("Service added to cart");
 }
 
+function downloadInvoice(invoiceNumber) {
+
+    fetch(`/api/invoices/${invoiceNumber}/download`, {
+        method: "GET",
+        headers: authHeaders()
+    })
+    .then(res => res.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = invoiceNumber + ".pdf";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    })
+    .catch(() => showToast("Failed to download invoice", "error"));
+}
+
+let currentAppointmentId = null;
+
+function openDummyPaymentGateway(appointmentId, amount) {
+    currentAppointmentId = appointmentId;
+
+    document.getElementById("pgAmount").innerText = amount;
+    document.getElementById("pgPayBtnAmount").innerText = amount;
+    document.getElementById("pgStatus").innerHTML = "";
+
+    document.getElementById("pgPayBtn").disabled = false;
+
+    new bootstrap.Modal(
+        document.getElementById("paymentGatewayModal")
+    ).show();
+}
+
+
+document.getElementById("pgPayBtn").addEventListener("click", () => {
+    const statusDiv = document.getElementById("pgStatus");
+    const payBtn = document.getElementById("pgPayBtn");
+
+    payBtn.disabled = true;
+    statusDiv.innerHTML =
+      "<span class='text-info'>Processing payment...</span>";
+
+    fetch(`/api/payments/payment/${currentAppointmentId}`, {
+        method: "POST",
+        headers: authHeaders()
+    })
+    .then(res => res.json())
+    .then(data => {
+
+    	if (data.paymentStatus === "SUCCESS") {
+    	    statusDiv.innerHTML =
+    	      "<span class='text-success'>Payment Successful ✅</span>";
+
+    	    // 🔥 RESET STATE (VERY IMPORTANT)
+    	    pendingAppointmentId = null;
+
+    	    // 🔥 CLEAR CART
+    	    cart = [];
+    	    renderCart();
+    	    checkFormValidity();
+
+    	    setTimeout(() => {
+    	        bootstrap.Modal
+    	          .getInstance(
+    	            document.getElementById("paymentGatewayModal")
+    	          )
+    	          .hide();
+
+    	        loadAppointments();
+    	    }, 1200);
+    	}
+        else {
+            statusDiv.innerHTML =
+              `<span class='text-danger'>
+                 Payment Failed ❌<br>
+                 ${data.failureReason ?? "Please try again"}
+               </span>`;
+            payBtn.disabled = false;
+        }
+    })
+    .catch(() => {
+        statusDiv.innerHTML =
+          "<span class='text-danger'>Payment error</span>";
+        payBtn.disabled = false;
+    });
+});
+
+
+document
+.getElementById("appointments-tab-btn")
+.addEventListener("shown.bs.tab", () => {
+    loadAppointments();
+});
 
 
 </script>

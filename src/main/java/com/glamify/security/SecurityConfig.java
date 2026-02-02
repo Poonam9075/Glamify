@@ -64,6 +64,8 @@ public class SecurityConfig {
                 // ROLE-BASED APIs
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
+                .requestMatchers("/api/payments/**").hasRole("CUSTOMER")
+                .requestMatchers("/api/invoices/**").hasRole("CUSTOMER")
                 .requestMatchers("/api/professional/**").hasRole("PROFESSIONAL")
 
                 // EVERYTHING ELSE
