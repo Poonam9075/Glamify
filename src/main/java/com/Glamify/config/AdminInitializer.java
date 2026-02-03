@@ -34,7 +34,7 @@ public class AdminInitializer {
             admin.setLastName("Admin");
             admin.setEmail("admin@glamify.com");
             admin.setPhone("9999999999");
-            admin.setGender(Gender.FEMALE); // optional
+            admin.setGender(Gender.FEMALE); 
             admin.setPassword(passwordEncoder.encode("admin@123"));
             admin.setRole(UserRole.ROLE_ADMIN);
             admin.setIsActive(Status.ACTIVE);

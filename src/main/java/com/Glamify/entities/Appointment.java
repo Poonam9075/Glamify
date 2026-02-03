@@ -23,7 +23,8 @@ public class Appointment extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private AppointmentStatus status;
+   // private AppointmentStatus status;
+    private AppointmentStatus status = AppointmentStatus.BOOKED;
 
     // -------- Address at booking time --------
     @Column(length = 200, nullable = false)
