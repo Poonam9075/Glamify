@@ -15,6 +15,7 @@ import com.glamify.dto.CustomerDto;
 import com.glamify.dto.PendingProfessionalResponse;
 import com.glamify.dto.ProfessionalDto;
 import com.glamify.dto.UserDto;
+import com.glamify.dto.mapper.AdminStatsDto;
 import com.glamify.service.AdminService;
 import com.glamify.service.AppointmentService;
 import com.glamify.service.BeautyServicesService;
@@ -98,7 +99,7 @@ public class AdminController {
 
     @GetMapping("/appointments")
     public List<AppointmentDto> getAppointments() {
-        return appointmentService.getAllAppointments();
+        return appointmentService.getAllAppointmentsAdmin();
     }
 
     
@@ -129,5 +130,11 @@ public class AdminController {
     public ResponseEntity<BeautyServiceDto> toggleService(@PathVariable Long id) {
     	return ResponseEntity.ok(beautyServicesService.toggleService(id));
     }
+    
+    @GetMapping("/dashboard-stats")
+    public AdminStatsDto getAdminStats() {
+        return adminService.getAdminStats();
+    }
+    
 
 }

@@ -8,9 +8,11 @@ import lombok.Data;
 public class AppointmentDto {
 
     private Long appointmentId;
-    private LocalDateTime dateTime;
-    private String location;    
     private Long customerId;
+    private String customerName;
+    private String professionalName;
+    private LocalDateTime dateTime;
+    private String location;
     private Long professionalId;
     private List<Long> bookedServiceIds;
     private double amount;

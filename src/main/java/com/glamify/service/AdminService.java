@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.glamify.dto.PendingProfessionalResponse;
 import com.glamify.dto.UserDto;
+import com.glamify.dto.mapper.AdminStatsDto;
 import com.glamify.entity.User;
 
 public interface AdminService {
@@ -19,4 +20,6 @@ public interface AdminService {
 	String updateUser(Long id, UserDto updatedUser);
 
 	User toggleUser(Long id);
+
+	AdminStatsDto getAdminStats();
 }

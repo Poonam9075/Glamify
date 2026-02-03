@@ -1,6 +1,8 @@
 package com.glamify.service;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -9,9 +11,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.glamify.dto.PendingProfessionalResponse;
 import com.glamify.dto.UserDto;
+import com.glamify.dto.mapper.AdminStatsDto;
 import com.glamify.dto.mapper.UserMapper;
 import com.glamify.entity.Professional;
 import com.glamify.entity.User;
+import com.glamify.repository.AppointmentRepository;
+import com.glamify.repository.BeautyServiceRepository;
 import com.glamify.repository.ProfessionalRepository;
 import com.glamify.repository.UserRepository;
 
@@ -20,13 +25,19 @@ public class AdminServiceImpl implements AdminService {
 
     private final ProfessionalRepository professionalRepository;
     private final UserRepository userRepository;
-
+    private final BeautyServiceRepository beautyServiceRepository;
+    private final AppointmentRepository appointmentRepository;
+    
     public AdminServiceImpl(
 				            ProfessionalRepository professionalRepository,
-				            UserRepository userRepository
+				            UserRepository userRepository,
+				            BeautyServiceRepository beautyServiceRepository,
+				            AppointmentRepository appointmentRepository
 				    		) {
         this.professionalRepository = professionalRepository;
         this.userRepository = userRepository;
+        this.beautyServiceRepository = beautyServiceRepository;
+        this.appointmentRepository = appointmentRepository;
     }
    
     @Override
@@ -125,5 +136,23 @@ public class AdminServiceImpl implements AdminService {
 
         return user;
     }
+
+	@Override
+	public AdminStatsDto getAdminStats() {
+
+		LocalDate today = LocalDate.now();
+	    		
+		AdminStatsDto adminStatsDto = new AdminStatsDto();
+		
+		adminStatsDto.setActiveServices(beautyServiceRepository.findByActiveTrue().size());
+		adminStatsDto.setTotalUsers(userRepository.findByActive(true).size());
+		adminStatsDto.setTodaysBookings(appointmentRepository.findAll().stream()
+	            .filter(a -> a.getDateTime() != null)
+	            .filter(a -> a.getDateTime().toLocalDate().equals(today))
+	            .collect(Collectors.toList()).size());
+		adminStatsDto.setPendingProfessionals(professionalRepository.findByApprovedFalse().size());
+		
+		return adminStatsDto;
+	}
     
 }

@@ -1,12 +1,12 @@
 package com.glamify.service;
 
 import java.util.List;
+
 import com.glamify.dto.AppointmentBookingRequest;
 import com.glamify.dto.AppointmentDto;
 import com.glamify.dto.AppointmentViewDto;
 import com.glamify.entity.Appointment;
 import com.glamify.entity.AppointmentStatus;
-import com.glamify.entity.Payment;
 
 public interface AppointmentService {
 
@@ -31,5 +31,7 @@ public interface AppointmentService {
 	void markPaymentPending(Appointment appointment);
 
 	void confirmAppointment(Appointment appointment);
+
+	List<AppointmentDto> getAllAppointmentsAdmin();
 
 }

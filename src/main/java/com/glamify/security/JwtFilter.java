@@ -2,6 +2,7 @@ package com.glamify.security;
 
 import java.io.IOException;
 import java.util.List;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,7 +45,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // No token → continue without authentication
+        // No token → continue
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -52,20 +53,20 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
 
-        // Validate token
         if (!jwtUtil.validateToken(token)) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String username = jwtUtil.extractUsername(token);
-        String role = jwtUtil.extractRole(token); // CUSTOMER / ADMIN / PROFESSIONAL
+        String role = jwtUtil.extractRole(token); // ADMIN / CUSTOMER / PROFESSIONAL
 
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
                         username,
                         null,
                         List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                        //List.of(new SimpleGrantedAuthority(role)) // 🔥 CORRECT
                 );
 
         authentication.setDetails(
@@ -73,7 +74,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Debug
+        // Debug (optional)
         System.out.println("Authenticated user = " + username);
         System.out.println("Authorities = " + authentication.getAuthorities());
 

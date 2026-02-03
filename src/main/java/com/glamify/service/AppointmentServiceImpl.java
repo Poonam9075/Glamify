@@ -15,8 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.glamify.dto.AppointmentBookingRequest;
 import com.glamify.dto.AppointmentDto;
 import com.glamify.dto.AppointmentViewDto;
+import com.glamify.dto.UserDto;
 import com.glamify.dto.mapper.AppointmentMapper;
 import com.glamify.dto.mapper.AppointmentViewMapper;
+import com.glamify.dto.mapper.UserMapper;
 import com.glamify.entity.Appointment;
 import com.glamify.entity.AppointmentStatus;
 import com.glamify.entity.BeautyService;
@@ -34,6 +36,7 @@ import com.glamify.repository.CustomerRepository;
 import com.glamify.repository.InvoiceRepository;
 import com.glamify.repository.PaymentRepository;
 import com.glamify.repository.ProfessionalRepository;
+import com.glamify.repository.UserRepository;
 
 @Service
 @Transactional
@@ -47,7 +50,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final CustomerRepository customerRepo;
     private final ProfessionalRepository professionalRepo;
     private final BeautyServiceRepository serviceRepo;
-
+    private final UserRepository userRepository;
+    
     // ================== CONSTRUCTOR ==================
     public AppointmentServiceImpl(AppointmentRepository appointmentRepo,
                               BookedServiceRepository bookedServiceRepo,
@@ -55,7 +59,8 @@ public class AppointmentServiceImpl implements AppointmentService {
                               PaymentRepository paymentRepo,
                               CustomerRepository customerRepo,
                               ProfessionalRepository professionalRepo,
-                              BeautyServiceRepository serviceRepo) {
+                              BeautyServiceRepository serviceRepo,
+                              UserRepository userRepository) {
         this.appointmentRepo = appointmentRepo;
         this.bookedServiceRepo = bookedServiceRepo;
         this.invoiceRepo = invoiceRepo;
@@ -63,14 +68,24 @@ public class AppointmentServiceImpl implements AppointmentService {
         this.customerRepo = customerRepo;
         this.professionalRepo = professionalRepo;
         this.serviceRepo = serviceRepo;
+        this.userRepository = userRepository;
     }
 
     @Override
     public List<AppointmentDto> getAllAppointments() {
     	
-    	List<Appointment> appointmentList = appointmentRepo.findAll(); 
+    	List<Appointment> appointmentList = appointmentRepo.findAll();    	
     	    	
     	return AppointmentMapper.toDtoList(appointmentList);
+    }
+    
+    @Override
+    public List<AppointmentDto> getAllAppointmentsAdmin() {
+    	
+    	List<Appointment> appointmentList = appointmentRepo.findAll();    	
+    	List<UserDto> usersList = UserMapper.toDtolist(userRepository.findAll());
+    	
+    	return AppointmentMapper.toDtoListWithUsernames(appointmentList, usersList);
     }
     
     
