@@ -14,7 +14,7 @@ public class RatingRequestDto {
     @Max(5)
     private Integer rating;
 
-    // ✅ PROPER GETTERS & SETTERS
+    //  GETTERS & SETTERS
 
     public Long getAppointmentId() {
         return appointmentId;
