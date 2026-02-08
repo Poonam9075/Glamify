@@ -17,10 +17,10 @@ import lombok.Setter;
  * Common Fields here.
  */
 
-//do not create entity
+
 @Getter
 @Setter
-@MappedSuperclass
+@MappedSuperclass //do not create entity
 public abstract class BaseEntity {
 
 //Primary key
