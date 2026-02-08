@@ -42,20 +42,20 @@ public class AppointmentServiceImple implements AppointmentService {
 
     @Override
     public ApiResponse bookAppointment(AppointmentCreateDTO request) {
-        // 1️ Get logged-in customer
+        //  Get logged-in customer
         Long userId = SecurityUtils.getLoggedInUserId();
         
         Customer customer = customerRepository.findByUserId(userId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Customer not found"));
 
-        // 2️ Validate appointment date
+        //  Validate appointment date
         if (request.getAppointmentDateTime().isBefore(LocalDateTime.now())) {
             throw new InvalidOperationException(
                     "Appointment date must be in the future");
         }
 
-        // 3️ Validate professional
+        //  Validate professional
         Professional professional = professionalRepository
                 .findById(request.getProfessionalId())
                 .orElseThrow(() ->
@@ -66,22 +66,22 @@ public class AppointmentServiceImple implements AppointmentService {
                     "Professional is not approved yet");
         }
 
-        // 4️ Validate service
+        //  Validate service
         Services service = serviceRepository
                 .findById(request.getServiceId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Service not found"));
 
-        // 5️ Map DTO → Appointment entity
+        //  Map DTO → Appointment entity
         Appointment appointment = modelMapper.map(request, Appointment.class);
 
-        // 6️ Set system-controlled fields
+        //  Set system-controlled fields
         appointment.setCustomer(customer);
         appointment.setProfessional(professional);
         appointment.setService(service);
         appointment.setStatus(AppointmentStatus.BOOKED);
 
-        // 7️ Save
+        //  Save
         appointmentRepository.save(appointment);
 
         return new ApiResponse(
@@ -93,18 +93,18 @@ public class AppointmentServiceImple implements AppointmentService {
     @Override
     public List<AppointmentResponseDTO> getCustomerAppointments() {
 
-        // 1️ Get logged-in customer
+        //  Get logged-in customer
         Long userId = SecurityUtils.getLoggedInUserId();
 
         Customer customer = customerRepository.findByUserId(userId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Customer not found"));
 
-        // 2️ Fetch appointments
+        //  Fetch appointments
         List<Appointment> appointments =
                 appointmentRepository.findByCustomer(customer);
 
-        // 3️ Map to DTO
+        //  Map to DTO
         return appointments.stream()
                 .map(appointment -> {
                     AppointmentResponseDTO dto = new AppointmentResponseDTO();
@@ -130,18 +130,18 @@ public class AppointmentServiceImple implements AppointmentService {
     @Override
     public List<AppointmentResponseDTO> getProfessionalAppointments() {
 
-        // 1️ Get logged-in professional
+        //  Get logged-in professional
         Long userId = SecurityUtils.getLoggedInUserId();
 
         Professional professional = professionalRepository.findByUserId(userId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Professional not found"));
 
-        // 2️ Fetch appointments
+        //  Fetch appointments
         List<Appointment> appointments =
                 appointmentRepository.findByProfessional(professional);
 
-        // 3️ Manual mapping (flattened DTO)
+        //  Manual mapping (flattened DTO)
         return appointments.stream()
                 .map(appointment -> {
                     AppointmentResponseDTO dto = new AppointmentResponseDTO();
@@ -200,28 +200,28 @@ public class AppointmentServiceImple implements AppointmentService {
     @Override
     public ApiResponse cancelAppointment(Long appointmentId) {
 
-        // 1️ Get logged-in user id
+        //  Get logged-in user id
         Long userId = SecurityUtils.getLoggedInUserId();
 
-        // 2️ Fetch appointment for THIS customer only
+        //  Fetch appointment for THIS customer only
         Appointment appointment = appointmentRepository
                 .findByIdAndCustomerUserId(appointmentId, userId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Appointment not found"));
 
-        // 3️ Validate status
+        //  Validate status
         if (appointment.getStatus() != AppointmentStatus.BOOKED) {
             throw new InvalidOperationException(
                     "Only BOOKED appointments can be cancelled");
         }
 
-        // 4️ Validate time
+        //  Validate time
         if (appointment.getAppointmentDateTime().isBefore(LocalDateTime.now())) {
             throw new InvalidOperationException(
                     "Cannot cancel past appointments");
         }
 
-        // 5️ Cancel appointment
+        //  Cancel appointment
         appointment.setStatus(AppointmentStatus.CANCELLED);
 
         return new ApiResponse(
@@ -309,7 +309,7 @@ public class AppointmentServiceImple implements AppointmentService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Appointment not found"));
 
-        // ✅ THIS CHECK BELONGS HERE
+        //  THIS CHECK BELONGS HERE
         if (appointment.getStatus() != AppointmentStatus.COMPLETED) {
             throw new InvalidOperationException("Service not completed yet");
         }
