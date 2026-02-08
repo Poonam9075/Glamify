@@ -22,7 +22,7 @@ public class AuthServiceImple implements AuthService {
     @Override
     public AuthResponse login(AuthRequest request) {
 
-        // 1️ Ask Spring Security to authenticate user
+        //  Ask Spring Security to authenticate user
         Authentication authentication =
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(
@@ -31,14 +31,14 @@ public class AuthServiceImple implements AuthService {
                         )
                 );
 
-        // 2️ If authentication is successful, get logged-in user
+        //  If authentication is successful, get logged-in user
         UserPrincipal principal =
                 (UserPrincipal) authentication.getPrincipal();
 
-        // 3️ Generate JWT token
+        //  Generate JWT token
         String token = jwtUtils.generateToken(principal);
 
-        // 4️ Return response
+        //  Return response
         return new AuthResponse(
                 "Login successful",
                 token,
