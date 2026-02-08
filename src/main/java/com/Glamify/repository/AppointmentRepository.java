@@ -11,7 +11,6 @@ import com.Glamify.entities.Professional;
 
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
-    // No extra code needed
 	List<Appointment> findByCustomer(Customer customer);
 	List<Appointment> findByProfessional(Professional professional);
 	Optional<Appointment> findByIdAndCustomerUserId(Long appointmentId, Long userId);
