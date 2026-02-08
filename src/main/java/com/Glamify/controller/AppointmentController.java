@@ -28,6 +28,7 @@ public class AppointmentController {
 
     private final AppointmentService appointmentService;
 
+    //Book appointment
     @PostMapping
     public ResponseEntity<ApiResponse> bookAppointment(
             @RequestBody AppointmentCreateDTO request) {
@@ -38,7 +39,8 @@ public class AppointmentController {
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
-    
+
+    //Get appointment
     @GetMapping
     public ResponseEntity<List<AppointmentResponseDTO>> getMyAppointments() {
 
@@ -46,7 +48,8 @@ public class AppointmentController {
                 appointmentService.getCustomerAppointments()
         );
     }
-    
+
+    //Get Professional
     @GetMapping("/professional")
     public ResponseEntity<List<AppointmentResponseDTO>> getProfessionalAppointments() {
 
@@ -55,6 +58,7 @@ public class AppointmentController {
         );
     }
 
+    //Status update
     @PutMapping("/professional/{appointmentId}/complete")
     public ResponseEntity<ApiResponse> completeAppointment(
             @PathVariable Long appointmentId) {
