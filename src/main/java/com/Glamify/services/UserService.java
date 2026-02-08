@@ -1,9 +1,4 @@
 
-//public interface UserService {
-//    void activateUser(String email);
-//}
-
-
 package com.Glamify.services;
 
 import com.Glamify.entities.User;
