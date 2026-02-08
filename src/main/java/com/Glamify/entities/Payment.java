@@ -32,7 +32,7 @@ public class Payment {
     @Column(nullable = false)
     private PaymentStatus status;
 
-    /* ===== GETTERS ===== */
+    /* GETTERS */
 
     public Long getPaymentId() {
         return paymentId;
@@ -62,7 +62,7 @@ public class Payment {
         return status;
     }
 
-    /* ===== SETTERS ===== */
+    /*  SETTERS  */
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
