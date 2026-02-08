@@ -28,12 +28,12 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public PaymentResponseDto makePayment(PaymentRequestDto request) {
 
-        // 1️⃣ Fetch appointment
+        //  Fetch appointment
         Appointment appointment = appointmentRepository
                 .findById(request.getAppointmentId())
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        // 2️⃣ Create Payment entity
+        //  Create Payment entity
         Payment payment = new Payment();
         payment.setAppointmentId(request.getAppointmentId());
         payment.setCustomerId(request.getCustomerId());
@@ -42,13 +42,13 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setPaymentTime(LocalDateTime.now());
         payment.setStatus(PaymentStatus.SUCCESS);
 
-        // 3️⃣ Save payment
+        //  Save payment
         paymentRepository.save(payment);
 
         appointment.setStatus(AppointmentStatus.COMPLETED);
         appointmentRepository.save(appointment);
 
-        // 5️⃣ RETURN A PROPER RESPONSE
+        //  RETURN A PROPER RESPONSE
         return new PaymentResponseDto(
                 "Payment successful",
                 PaymentStatus.SUCCESS
