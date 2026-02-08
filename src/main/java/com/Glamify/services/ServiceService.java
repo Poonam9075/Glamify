@@ -4,12 +4,6 @@ import java.util.List;
 
 import com.Glamify.dto.ServiceResponseDTO;
 
-public interface ServiceService {
-	
-	
-
-	    
+public interface ServiceService {    
 	    List<ServiceResponseDTO> getAllServices();
-	    
-	
 }
