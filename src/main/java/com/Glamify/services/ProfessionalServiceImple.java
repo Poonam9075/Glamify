@@ -32,19 +32,19 @@ public class ProfessionalServiceImple implements ProfessionalService {
     @Override
     public ApiResponse registerProfessional(ProfessionalRegDTO request) {
 
-        // ✅ 1. Duplicate Email Check
+        //  1. Duplicate Email Check
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateResourceException(
                     "Email already registered: " + request.getEmail());
         }
 
-        // ✅ 2. Duplicate Phone Check
+        //  2. Duplicate Phone Check
         if (userRepository.existsByPhone(request.getPhone())) {
             throw new DuplicateResourceException(
                     "Phone already registered: " + request.getPhone());
         }
 
-        // ✅ 3. Create User
+        //  3. Create User
         User user = new User();
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
@@ -61,7 +61,7 @@ public class ProfessionalServiceImple implements ProfessionalService {
 
         User savedUser = userRepository.save(user);
 
-        // ✅ 4. Create Professional
+        //  4. Create Professional
         Professional professional = new Professional();
         professional.setSpeciality(request.getSpeciality());
         professional.setExperienceInYears(request.getExperienceInYears());
@@ -86,23 +86,23 @@ public class ProfessionalServiceImple implements ProfessionalService {
             Long professionalId,
             ProfessionalApprovalDTO request) {
 
-        // 1️⃣ Fetch professional
+        //  Fetch professional
         Professional professional = professionalRepository
                 .findById(professionalId)
                 .orElseThrow(() ->
                     new ResourceNotFoundException(
                         "Professional not found with id: " + professionalId));
 
-        // 2️⃣ Validate current status
+        //  Validate current status
         if (professional.getStatus() != ProfessionalStatus.PENDING) {
             throw new ApiException(
                 "Professional already " + professional.getStatus());
         }
 
-        // 3️⃣ Update status (DTO → Entity)
+        //  Update status (DTO → Entity)
         professional.setStatus(request.getStatus());
 
-        // 4️⃣ Save
+        //  Save
         professionalRepository.save(professional);
 
         return new ApiResponse(
