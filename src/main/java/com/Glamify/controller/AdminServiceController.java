@@ -23,6 +23,7 @@ public class AdminServiceController {
     private final AdminServiceService service;
     private final AdminService adminService;
 
+    //add service
     @PostMapping
     public ResponseEntity<ApiResponse> addService(
             @RequestBody ServiceCreateDTO dto) {
@@ -30,7 +31,7 @@ public class AdminServiceController {
         return ResponseEntity.ok(service.addService(dto));
     }
     
-    
+    //update service
     @PutMapping("/{serviceId}")
     public ResponseEntity<ApiResponse> updateService(
             @PathVariable Long serviceId,
